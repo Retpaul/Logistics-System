@@ -2,12 +2,12 @@
   "name": "bike_dispatch",
   "version": "1.0.0",
   "description": "bike dispatch server side ",
-  "main": "build/app.js",
+  "main": "build/server.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch app.ts",
+    "dev": "tsx watch server.ts",
     "build": "tsc",
-    "start": "node build/app.js",
+    "start": "node build/server.js",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
@@ -16,7 +16,9 @@
     "db:studio": "prisma studio",
     "perf:seed": "node scripts/perf/seed.mjs",
     "perf:bench": "node scripts/perf/bench.mjs",
-    "perf:compare": "node scripts/perf/compare.mjs"
+    "perf:compare": "node scripts/perf/compare.mjs",
+    "test": "vitest run",
+    "db:seed:dev": "tsx scripts/seed-dev.ts"
   },
   "keywords": [
     "bike",
@@ -38,10 +40,10 @@
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-async-handler": "^1.2.0",
+    "express-rate-limit": "^8.7.4",
     "handlebars": "^4.7.8",
-    "joi": "^18.0.2",
+    "jsonwebtoken": "^9.0.3",
     "lodash": "^4.17.23",
-    "mongoose": "^9.2.3",
     "morgan": "^1.10.1",
     "multer": "^2.1.0",
     "nodemailer": "^8.0.1",
@@ -50,7 +52,8 @@
     "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
     "uuid": "^13.0.0",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -66,9 +69,12 @@
     "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
     "@types/speakeasy": "^2.0.10",
+    "@types/supertest": "^7.2.1",
     "@types/uuid": "^10.0.0",
     "prisma": "^7.10.1",
+    "supertest": "^7.3.2",
     "tsx": "^4.23.15",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0"
   }
 }
