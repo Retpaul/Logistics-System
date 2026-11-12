@@ -75,6 +75,7 @@ Tenant isolation: the tenant comes from the access token (staff and riders) or f
 - `test/`: API tests; `scripts/seed-dev.ts`: demo data.
 - `docs/DATABASE.md`: ER diagram, relational schema, normalisation and diagram tooling.
 - `docs/PERFORMANCE.md`: API SQL queries, results, execution plans, indexing evidence and performance analysis at 1M orders.
+- [Transaction and concurrency evidence](docs/TRANSACTIONS.md): reproducible commit, rollback, isolation and competing-update examples with captured SQL output (`npm run transactions:evidence`).
 - `sql/perf/`, `scripts/perf/`: synthetic dataset, query catalogue and benchmark runner (`npm run perf:seed`, `perf:bench`, `perf:compare`). Development databases only.
 
 The CLI configuration reads DATABASE_URL independently of runtime config. Application code reads environment variables only in config. Follow routes → validation/middleware → controllers → services → repositories when adding business endpoints. Hash passwords explicitly (`lib/password.ts`) before creating users: Prisma does not run Mongoose pre-save hooks.

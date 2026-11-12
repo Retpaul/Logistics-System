@@ -17,6 +17,7 @@
     "perf:seed": "node scripts/perf/seed.mjs",
     "perf:bench": "node scripts/perf/bench.mjs",
     "perf:compare": "node scripts/perf/compare.mjs",
+    "transactions:evidence": "node scripts/transactions/evidence.mjs",
     "test": "vitest run",
     "db:seed:dev": "tsx scripts/seed-dev.ts"
   },
