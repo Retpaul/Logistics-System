@@ -1,0 +1,18 @@
+-- Q04: Orders page, "Today" filter, Lagos local day (US-17)
+-- Endpoint: GET /orders?date=today
+-- Label: optimised
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."deliveryAddress", o."deliveryFee", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+  AND o."createdAt" >= date_trunc('day', now() AT TIME ZONE 'Africa/Lagos') AT TIME ZONE 'Africa/Lagos'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=0.43..28.66 rows=25 width=119) (actual time=0.016..0.036 rows=25 loops=1)
+  Buffers: shared hit=28
+  ->  Index Scan Backward using "Order_tenantId_createdAt_idx" on "Order" o  (cost=0.43..230.73 rows=204 width=119) (actual time=0.014..0.033 rows=25 loops=1)
+        Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (date_trunc('day'::text, (now() AT TIME ZONE 'Africa/Lagos'::text)) AT TIME ZONE 'Africa/Lagos'::text)))
+        Buffers: shared hit=28
+Planning Time: 0.201 ms
+Execution Time: 0.051 ms

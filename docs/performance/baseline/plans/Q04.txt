@@ -1,0 +1,27 @@
+-- Q04: Orders page, "Today" filter, Lagos local day (US-17)
+-- Endpoint: GET /orders?date=today
+-- Label: baseline
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."deliveryAddress", o."deliveryFee", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+  AND o."createdAt" >= date_trunc('day', now() AT TIME ZONE 'Africa/Lagos') AT TIME ZONE 'Africa/Lagos'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=964.97..965.03 rows=25 width=119) (actual time=0.618..0.624 rows=25.00 loops=1)
+  Buffers: shared hit=275
+  ->  Sort  (cost=964.97..965.59 rows=247 width=119) (actual time=0.617..0.620 rows=25.00 loops=1)
+        Sort Key: "createdAt" DESC
+        Sort Method: top-N heapsort  Memory: 36kB
+        Buffers: shared hit=275
+        ->  Bitmap Heap Scan on "Order" o  (cost=24.65..958.00 rows=247 width=119) (actual time=0.156..0.488 rows=265.00 loops=1)
+              Recheck Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (date_trunc('day'::text, (now() AT TIME ZONE 'Africa/Lagos'::text)) AT TIME ZONE 'Africa/Lagos'::text)))
+              Heap Blocks: exact=263
+              Buffers: shared hit=275
+              ->  Bitmap Index Scan on "Order_tenantId_status_createdAt_idx"  (cost=0.00..24.59 rows=247 width=0) (actual time=0.089..0.089 rows=265.00 loops=1)
+                    Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (date_trunc('day'::text, (now() AT TIME ZONE 'Africa/Lagos'::text)) AT TIME ZONE 'Africa/Lagos'::text)))
+                    Index Searches: 3
+                    Buffers: shared hit=12
+Planning Time: 0.228 ms
+Execution Time: 0.663 ms

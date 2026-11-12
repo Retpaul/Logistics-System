@@ -1,0 +1,19 @@
+-- Q05: Orders page, status filter "Delivered" (US-17)
+-- Endpoint: GET /orders?status=DELIVERED
+-- Label: optimised
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."deliveryAddress", o."deliveryFee", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o.status = 'DELIVERED'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=0.42..6.17 rows=25 width=119) (actual time=0.017..0.047 rows=25 loops=1)
+  Buffers: shared hit=98
+  ->  Index Scan Backward using "Order_tenantId_createdAt_idx" on "Order" o  (cost=0.42..45778.13 rows=199240 width=119) (actual time=0.016..0.045 rows=25 loops=1)
+        Index Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+        Filter: (status = 'DELIVERED'::"OrderStatus")
+        Rows Removed by Filter: 68
+        Buffers: shared hit=98
+Planning Time: 0.094 ms
+Execution Time: 0.056 ms

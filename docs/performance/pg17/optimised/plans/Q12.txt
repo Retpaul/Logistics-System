@@ -1,0 +1,13 @@
+-- Q12: Manual order entry: find existing customer by phone (US-07)
+-- Endpoint: GET /customers?phone=
+-- Label: optimised
+
+SELECT c.id, c.name, c.phone, c.email
+FROM "Customer" c
+WHERE c."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND c.phone = '+2348000000000';
+
+Index Scan using "Customer_tenantId_phone_idx" on "Customer" c  (cost=0.42..2.64 rows=1 width=71) (actual time=0.011..0.011 rows=1 loops=1)
+  Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ((phone)::text = '+2348000000000'::text))
+  Buffers: shared hit=4
+Planning Time: 0.053 ms
+Execution Time: 0.019 ms

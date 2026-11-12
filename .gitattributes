@@ -1,0 +1,3 @@
+*.sql text eol=lf
+*.prisma text eol=lf
+*.toml text eol=lf

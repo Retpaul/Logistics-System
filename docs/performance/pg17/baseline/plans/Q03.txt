@@ -1,0 +1,31 @@
+-- Q03: Orders page, default view: newest 25 orders for the tenant (US-17)
+-- Endpoint: GET /orders?limit=25
+-- Label: baseline
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."deliveryAddress", o."deliveryFee", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=43224.78..43227.70 rows=25 width=119) (actual time=368.812..384.444 rows=25 loops=1)
+  Buffers: shared hit=16 read=36812
+  ->  Gather Merge  (cost=43224.78..64054.74 rows=178530 width=119) (actual time=368.811..384.438 rows=25 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=16 read=36812
+        ->  Sort  (cost=42224.76..42447.92 rows=89265 width=119) (actual time=327.255..327.260 rows=20 loops=3)
+              Sort Key: "createdAt" DESC
+              Sort Method: top-N heapsort  Memory: 36kB
+              Buffers: shared hit=16 read=36812
+              Worker 0:  Sort Method: top-N heapsort  Memory: 36kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 36kB
+              ->  Parallel Bitmap Heap Scan on "Order" o  (cost=1926.95..39705.77 rows=89265 width=119) (actual time=17.517..290.036 rows=71589 loops=3)
+                    Recheck Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                    Heap Blocks: exact=14249
+                    Buffers: shared read=36812
+                    ->  Bitmap Index Scan on "Order_tenantId_riderId_idx"  (cost=0.00..1873.39 rows=214236 width=0) (actual time=36.859..36.860 rows=214767 loops=1)
+                          Index Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                          Buffers: shared read=188
+Planning Time: 0.239 ms
+Execution Time: 384.489 ms

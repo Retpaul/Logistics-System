@@ -1,0 +1,121 @@
+Captured at: 2026-11-12T12:29:30.391Z
+Disposable database: bike_dispatch_tx_1794486570390_d855acf9
+Created isolated database; source database receives no application queries.
+Applied committed Prisma migrations.
+[observer] SQL: SELECT version(), current_setting('default_transaction_isolation') AS default_isolation
+Parameters: []
+[observer] Output: {"command":"SELECT","rowCount":1,"rows":[{"version":"PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35229, 64-bit","default_isolation":"read committed"}]}
+[A] SQL: INSERT INTO "Tenant" (id,name,subdomain) VALUES ($1,$2,$3)
+Parameters: ["14b1c7e5-bf84-4072-ab06-46210ba4fb06","Synthetic Transaction Tenant","tx-e4be30f0-d0bb-4175-a7cc-3918fb2c6b3b"]
+[A] Output: {"command":"INSERT","rowCount":1,"rows":[]}
+
+CASE 1: COMMIT
+[A] SQL: BEGIN ISOLATION LEVEL READ COMMITTED
+Parameters: []
+[A] Output: {"command":"BEGIN","rowCount":null,"rows":[]}
+[A] SQL: INSERT INTO "Customer" (id,"tenantId",name,phone) VALUES ($1,$2,$3,$4)
+Parameters: ["b489d4e6-e1b5-4ca0-9018-b49949fa1328","14b1c7e5-bf84-4072-ab06-46210ba4fb06","Synthetic Customer","+2340000000000"]
+[A] Output: {"command":"INSERT","rowCount":1,"rows":[]}
+[A] SQL: INSERT INTO "Order" (id,"tenantId","customerId","trackingCode","pickupAddress","deliveryAddress","recipientName","recipientPhone","deliveryFee","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,2500,now())
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e","14b1c7e5-bf84-4072-ab06-46210ba4fb06","b489d4e6-e1b5-4ca0-9018-b49949fa1328","c9831eae-e1a3-429f-9c66-2b5ad31f1fe8","Synthetic pickup","Synthetic destination","Synthetic Recipient","+2340000000001"]
+[A] Output: {"command":"INSERT","rowCount":1,"rows":[]}
+[A] SQL: INSERT INTO "OrderEvent" (id,"orderId",status) VALUES ($1,$2,$3)
+Parameters: ["73806505-9ea5-4063-82e2-57197098ba1d","d22c0d55-4004-44ec-bc14-85a89a93ea5e","PENDING"]
+[A] Output: {"command":"INSERT","rowCount":1,"rows":[]}
+[observer] SQL: SELECT (SELECT count(*)::int FROM "Customer" WHERE id=$1) AS customers,(SELECT count(*)::int FROM "Order" WHERE id=$2) AS orders,(SELECT count(*)::int FROM "OrderEvent" WHERE "orderId"=$2) AS events
+Parameters: ["b489d4e6-e1b5-4ca0-9018-b49949fa1328","d22c0d55-4004-44ec-bc14-85a89a93ea5e"]
+[observer] Output: {"command":"SELECT","rowCount":1,"rows":[{"customers":0,"orders":0,"events":0}]}
+[A] SQL: COMMIT
+Parameters: []
+[A] Output: {"command":"COMMIT","rowCount":null,"rows":[]}
+[observer] SQL: SELECT (SELECT count(*)::int FROM "Customer" WHERE id=$1) AS customers,(SELECT count(*)::int FROM "Order" WHERE id=$2) AS orders,(SELECT count(*)::int FROM "OrderEvent" WHERE "orderId"=$2) AS events
+Parameters: ["b489d4e6-e1b5-4ca0-9018-b49949fa1328","d22c0d55-4004-44ec-bc14-85a89a93ea5e"]
+[observer] Output: {"command":"SELECT","rowCount":1,"rows":[{"customers":1,"orders":1,"events":1}]}
+PASS commit: all three records persisted, verified from an independent connection.
+
+CASE 2: ROLLBACK
+[A] SQL: BEGIN
+Parameters: []
+[A] Output: {"command":"BEGIN","rowCount":null,"rows":[]}
+[A] SQL: INSERT INTO "Customer" (id,"tenantId",name,phone) VALUES ($1,$2,$3,$4)
+Parameters: ["524f564c-1c0c-42b8-928e-60ca27e5d4fc","14b1c7e5-bf84-4072-ab06-46210ba4fb06","Synthetic Customer","+2340000000000"]
+[A] Output: {"command":"INSERT","rowCount":1,"rows":[]}
+[A] SQL: INSERT INTO "Order" (id,"tenantId","customerId","trackingCode","pickupAddress","deliveryAddress","recipientName","recipientPhone","deliveryFee","updatedAt") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,2500,now())
+Parameters: ["2cb83005-92a3-49a8-ae06-66ada1bfa210","14b1c7e5-bf84-4072-ab06-46210ba4fb06","524f564c-1c0c-42b8-928e-60ca27e5d4fc","acb3d020-f00a-46f9-91cd-c258698f3374","Synthetic pickup","Synthetic destination","Synthetic Recipient","+2340000000001"]
+[A] Output: {"command":"INSERT","rowCount":1,"rows":[]}
+[A] SQL: INSERT INTO "OrderEvent" (id,"orderId",status) VALUES ($1,$2,$3)
+Parameters: ["1eb9f5be-4a60-4297-8dea-848c2dbb39bc","2cb83005-92a3-49a8-ae06-66ada1bfa210","PENDING"]
+[A] Output: {"command":"INSERT","rowCount":1,"rows":[]}
+[A] SQL: UPDATE "Order" SET "deliveryFee"=-1 WHERE id=$1
+Parameters: ["2cb83005-92a3-49a8-ae06-66ada1bfa210"]
+Expected PostgreSQL error: 23514, constraint: Order_fee_nonnegative
+[A] SQL: ROLLBACK
+Parameters: []
+[A] Output: {"command":"ROLLBACK","rowCount":null,"rows":[]}
+[observer] SQL: SELECT (SELECT count(*)::int FROM "Customer" WHERE id=$1) AS customers,(SELECT count(*)::int FROM "Order" WHERE id=$2) AS orders,(SELECT count(*)::int FROM "OrderEvent" WHERE "orderId"=$2) AS events
+Parameters: ["524f564c-1c0c-42b8-928e-60ca27e5d4fc","2cb83005-92a3-49a8-ae06-66ada1bfa210"]
+[observer] Output: {"command":"SELECT","rowCount":1,"rows":[{"customers":0,"orders":0,"events":0}]}
+PASS rollback: customer, order and event all absent.
+
+CASE 3: READ COMMITTED isolation
+[A] SQL: BEGIN ISOLATION LEVEL READ COMMITTED
+Parameters: []
+[A] Output: {"command":"BEGIN","rowCount":null,"rows":[]}
+[B] SQL: BEGIN ISOLATION LEVEL READ COMMITTED
+Parameters: []
+[B] Output: {"command":"BEGIN","rowCount":null,"rows":[]}
+[B] SQL: SHOW transaction_isolation
+Parameters: []
+[B] Output: {"command":"SHOW","rowCount":null,"rows":[{"transaction_isolation":"read committed"}]}
+[A] SQL: UPDATE "Order" SET "deliveryFee"=3000 WHERE id=$1
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e"]
+[A] Output: {"command":"UPDATE","rowCount":1,"rows":[]}
+[B] SQL: SELECT "deliveryFee"::text AS fee FROM "Order" WHERE id=$1
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e"]
+[B] Output: {"command":"SELECT","rowCount":1,"rows":[{"fee":"2500.00"}]}
+[A] SQL: COMMIT
+Parameters: []
+[A] Output: {"command":"COMMIT","rowCount":null,"rows":[]}
+[B] SQL: SELECT "deliveryFee"::text AS fee FROM "Order" WHERE id=$1
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e"]
+[B] Output: {"command":"SELECT","rowCount":1,"rows":[{"fee":"3000.00"}]}
+[B] SQL: COMMIT
+Parameters: []
+[B] Output: {"command":"COMMIT","rowCount":null,"rows":[]}
+PASS isolation: no dirty read; next statement in the same reader transaction sees the committed change.
+
+CASE 4: concurrent optimistic status update
+[A] SQL: BEGIN ISOLATION LEVEL READ COMMITTED
+Parameters: []
+[A] Output: {"command":"BEGIN","rowCount":null,"rows":[]}
+[B] SQL: BEGIN ISOLATION LEVEL READ COMMITTED
+Parameters: []
+[B] Output: {"command":"BEGIN","rowCount":null,"rows":[]}
+[A] SQL: SELECT status FROM "Order" WHERE id=$1
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e"]
+[A] Output: {"command":"SELECT","rowCount":1,"rows":[{"status":"PENDING"}]}
+[B] SQL: SELECT status FROM "Order" WHERE id=$1
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e"]
+[B] Output: {"command":"SELECT","rowCount":1,"rows":[{"status":"PENDING"}]}
+[A] SQL: UPDATE "Order" SET status='CANCELLED' WHERE id=$1 AND "tenantId"=$2 AND status='PENDING' RETURNING status
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e","14b1c7e5-bf84-4072-ab06-46210ba4fb06"]
+[A] Output: {"command":"UPDATE","rowCount":1,"rows":[{"status":"CANCELLED"}]}
+[B] SQL: UPDATE "Order" SET status='CANCELLED' WHERE id=$1 AND "tenantId"=$2 AND status='PENDING' RETURNING status
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e","14b1c7e5-bf84-4072-ab06-46210ba4fb06"]
+Observed B wait_event_type=Lock while A holds the order row.
+[A] SQL: INSERT INTO "OrderEvent" (id,"orderId",status) VALUES ($1,$2,$3)
+Parameters: ["b952166f-3ada-49ae-bcd8-ff8305b56788","d22c0d55-4004-44ec-bc14-85a89a93ea5e","CANCELLED"]
+[A] Output: {"command":"INSERT","rowCount":1,"rows":[]}
+[A] SQL: COMMIT
+Parameters: []
+[A] Output: {"command":"COMMIT","rowCount":null,"rows":[]}
+[B] Output: {"command":"UPDATE","rowCount":0,"rows":[]}
+[B] SQL: ROLLBACK
+Parameters: []
+[B] Output: {"command":"ROLLBACK","rowCount":null,"rows":[]}
+Conflict: B affected zero rows. The application maps this condition to HTTP 409 CONFLICT.
+[observer] SQL: SELECT status,(SELECT count(*)::int FROM "OrderEvent" WHERE "orderId"=$1 AND status='CANCELLED') AS cancellation_events FROM "Order" WHERE id=$1
+Parameters: ["d22c0d55-4004-44ec-bc14-85a89a93ea5e"]
+[observer] Output: {"command":"SELECT","rowCount":1,"rows":[{"status":"CANCELLED","cancellation_events":1}]}
+PASS concurrency: one winner, one conflict, exactly one cancellation event.
+Cleanup: dropped only the disposable database created by this invocation.

@@ -1,0 +1,35 @@
+-- Q08: Analytics dashboard KPIs for today: orders, deliveries, revenue, average order value (US-18)
+-- Endpoint: GET /analytics/today
+-- Label: baseline
+
+SELECT count(*) AS orders_today,
+       count(*) FILTER (WHERE o.status = 'DELIVERED') AS delivered_today,
+       coalesce(sum(p.amount), 0) AS revenue_today,
+       round(avg(o."deliveryFee"), 2) AS avg_order_value
+FROM "Order" o
+LEFT JOIN "Payment" p ON p."orderId" = o.id AND p.status = 'PAID'
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+  AND o."createdAt" >= date_trunc('day', now() AT TIME ZONE 'Africa/Lagos') AT TIME ZONE 'Africa/Lagos';
+
+Aggregate  (cost=3021.48..3021.49 rows=1 width=80) (actual time=0.807..0.808 rows=1.00 loops=1)
+  Buffers: shared hit=1340
+  ->  Nested Loop Left Join  (cost=25.07..3018.39 rows=247 width=14) (actual time=0.102..0.750 rows=265.00 loops=1)
+        Buffers: shared hit=1340
+        ->  Bitmap Heap Scan on "Order" o  (cost=24.65..958.00 rows=247 width=25) (actual time=0.092..0.200 rows=265.00 loops=1)
+              Recheck Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (date_trunc('day'::text, (now() AT TIME ZONE 'Africa/Lagos'::text)) AT TIME ZONE 'Africa/Lagos'::text)))
+              Heap Blocks: exact=263
+              Buffers: shared hit=275
+              ->  Bitmap Index Scan on "Order_tenantId_status_createdAt_idx"  (cost=0.00..24.59 rows=247 width=0) (actual time=0.061..0.061 rows=265.00 loops=1)
+                    Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (date_trunc('day'::text, (now() AT TIME ZONE 'Africa/Lagos'::text)) AT TIME ZONE 'Africa/Lagos'::text)))
+                    Index Searches: 3
+                    Buffers: shared hit=12
+        ->  Index Scan using "Payment_orderId_idx" on "Payment" p  (cost=0.42..8.33 rows=1 width=21) (actual time=0.002..0.002 rows=0.91 loops=265)
+              Index Cond: ("orderId" = o.id)
+              Filter: (status = 'PAID'::"PaymentStatus")
+              Rows Removed by Filter: 0
+              Index Searches: 265
+              Buffers: shared hit=1065
+Planning:
+  Buffers: shared hit=16
+Planning Time: 0.215 ms
+Execution Time: 0.835 ms

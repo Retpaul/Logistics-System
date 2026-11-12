@@ -1,0 +1,42 @@
+-- Q01: Public tracking page: order, tenant branding, latest GPS point (US-09, polled every 10 s)
+-- Endpoint: GET /track/:trackingCode
+-- Label: baseline
+
+SELECT o.id, o.status, o."deliveryAddress", o."recipientName", o."createdAt",
+       t.name AS tenant_name, t."brandColor",
+       lp.latitude, lp.longitude, lp."recordedAt" AS last_seen_at
+FROM "Order" o
+JOIN "Tenant" t ON t.id = o."tenantId"
+LEFT JOIN LATERAL (
+  SELECT tp.latitude, tp.longitude, tp."recordedAt"
+  FROM "TrackingPoint" tp
+  WHERE tp."orderId" = o.id
+  ORDER BY tp."recordedAt" DESC
+  LIMIT 1
+) lp ON true
+WHERE o."trackingCode" = '1769131c-bd48-5264-34b5-983c6fa675e7';
+
+Nested Loop Left Join  (cost=8.88..16.99 rows=1 width=121) (actual time=0.043..0.054 rows=1.00 loops=1)
+  Buffers: shared hit=10
+  ->  Hash Join  (cost=8.46..11.73 rows=1 width=97) (actual time=0.034..0.045 rows=1.00 loops=1)
+        Hash Cond: (t.id = o."tenantId")
+        Buffers: shared hit=6
+        ->  Seq Scan on "Tenant" t  (cost=0.00..3.00 rows=100 width=36) (actual time=0.009..0.012 rows=100.00 loops=1)
+              Buffers: shared hit=2
+        ->  Hash  (cost=8.44..8.44 rows=1 width=93) (actual time=0.016..0.017 rows=1.00 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 9kB
+              Buffers: shared hit=4
+              ->  Index Scan using "Order_trackingCode_key" on "Order" o  (cost=0.42..8.44 rows=1 width=93) (actual time=0.013..0.014 rows=1.00 loops=1)
+                    Index Cond: ("trackingCode" = '1769131c-bd48-5264-34b5-983c6fa675e7'::text)
+                    Index Searches: 1
+                    Buffers: shared hit=4
+  ->  Limit  (cost=0.43..5.25 rows=1 width=24) (actual time=0.008..0.008 rows=1.00 loops=1)
+        Buffers: shared hit=4
+        ->  Index Scan Backward using "TrackingPoint_orderId_recordedAt_idx" on "TrackingPoint" tp  (cost=0.43..24.52 rows=5 width=24) (actual time=0.008..0.008 rows=1.00 loops=1)
+              Index Cond: ("orderId" = o.id)
+              Index Searches: 1
+              Buffers: shared hit=4
+Planning:
+  Buffers: shared hit=4
+Planning Time: 0.221 ms
+Execution Time: 0.095 ms

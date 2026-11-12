@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import assert from "node:assert/strict";
 
-const child = spawn(process.execPath, ["build/app.js"], {
+const child = spawn(process.execPath, ["build/server.js"], {
   env: { ...process.env, PORT: "18081", DATABASE_URL: "" },
   stdio: "pipe",
 });

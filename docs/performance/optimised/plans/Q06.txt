@@ -1,0 +1,18 @@
+-- Q06: Orders page, rider filter (US-17)
+-- Endpoint: GET /orders?riderId=:id
+-- Label: optimised
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."deliveryAddress", o."deliveryFee", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o."riderId" = '91203792-8dc8-3c7c-5827-0a3be5e682dc'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=0.42..98.30 rows=25 width=119) (actual time=0.008..0.024 rows=25.00 loops=1)
+  Buffers: shared hit=29
+  ->  Index Scan Backward using "Order_tenantId_riderId_createdAt_idx" on "Order" o  (cost=0.42..9592.12 rows=2450 width=119) (actual time=0.007..0.022 rows=25.00 loops=1)
+        Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("riderId" = '91203792-8dc8-3c7c-5827-0a3be5e682dc'::uuid))
+        Index Searches: 1
+        Buffers: shared hit=29
+Planning Time: 0.110 ms
+Execution Time: 0.033 ms

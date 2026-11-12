@@ -1,0 +1,22 @@
+-- Q04: Orders page, "Today" filter, Lagos local day (US-17)
+-- Endpoint: GET /orders?date=today
+-- Label: baseline
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."deliveryAddress", o."deliveryFee", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+  AND o."createdAt" >= date_trunc('day', now() AT TIME ZONE 'Africa/Lagos') AT TIME ZONE 'Africa/Lagos'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=4268.53..4268.59 rows=25 width=119) (actual time=9.949..9.955 rows=25 loops=1)
+  Buffers: shared hit=1936
+  ->  Sort  (cost=4268.53..4269.03 rows=200 width=119) (actual time=9.947..9.951 rows=25 loops=1)
+        Sort Key: "createdAt" DESC
+        Sort Method: top-N heapsort  Memory: 36kB
+        Buffers: shared hit=1936
+        ->  Index Scan using "Order_tenantId_status_createdAt_idx" on "Order" o  (cost=0.43..4262.89 rows=200 width=119) (actual time=0.019..9.813 rows=240 loops=1)
+              Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (date_trunc('day'::text, (now() AT TIME ZONE 'Africa/Lagos'::text)) AT TIME ZONE 'Africa/Lagos'::text)))
+              Buffers: shared hit=1936
+Planning Time: 0.183 ms
+Execution Time: 9.989 ms

@@ -1,34 +1,40 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { config } from "./config/index.js";
-import { checkDatabase, prisma } from "./startup/db.js";
+import { checkDatabase } from "./startup/db.js";
+import { errorHandler, notFoundHandler } from "./middleware/errors.js";
+import { authRouter, ordersRouter, publicRouter, tenantRouter } from "./routes/index.js";
 
-export const app = express();
-app.use(cors({ origin: config.clientUrl }));
-app.use(express.json({ limit: "1mb" }));
-app.get(`${config.apiVersion}/health`, (_req, res) => {
-  res.json({ status: "ok" });
-});
-app.get(`${config.apiVersion}/ready`, async (_req, res) => {
-  try {
-    await checkDatabase();
-    res.json({ status: "ready" });
-  } catch {
-    res.status(503).json({ status: "unavailable" });
-  }
-});
+/** Builds the Express app without listening, so tests can drive it with supertest. */
+export function createApp() {
+  const app = express();
+  const api = config.apiVersion;
 
-const server = app.listen(config.port, () => {
-  console.log(`Bike Dispatch listening on port ${config.port}`);
-  void checkDatabase().catch(() => console.error("Database unavailable; check DATABASE_URL and PostgreSQL"));
-});
+  app.disable("x-powered-by");
+  app.set("trust proxy", 1);
+  app.use(cors({ origin: config.clientUrl, credentials: true }));
+  app.use(express.json({ limit: "1mb" }));
+  app.use(cookieParser());
 
-async function shutdown() {
-  server.close(async () => {
-    await prisma.$disconnect();
-    process.exit(0);
+  app.get(`${api}/health`, (_req, res) => {
+    res.json({ status: "ok" });
   });
-  setTimeout(() => process.exit(1), 10000).unref();
+  app.get(`${api}/ready`, async (_req, res) => {
+    try {
+      await checkDatabase();
+      res.json({ status: "ready" });
+    } catch {
+      res.status(503).json({ status: "unavailable" });
+    }
+  });
+
+  app.use(`${api}/auth`, authRouter);
+  app.use(`${api}/tenant`, tenantRouter);
+  app.use(`${api}/orders`, ordersRouter);
+  app.use(`${api}/public`, publicRouter);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+  return app;
 }
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);

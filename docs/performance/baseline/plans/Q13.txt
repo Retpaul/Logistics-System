@@ -1,0 +1,36 @@
+-- Q13: Dispatcher search: orders by recipient phone (support call lookup, US-17)
+-- Endpoint: GET /orders?recipientPhone=
+-- Label: baseline
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o."recipientPhone" = '+2348170000267'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=41387.61..41387.85 rows=2 width=79) (actual time=219.408..232.674 rows=1.00 loops=1)
+  Buffers: shared hit=50 read=36819
+  ->  Gather Merge  (cost=41387.61..41387.85 rows=2 width=79) (actual time=219.406..232.671 rows=1.00 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=50 read=36819
+        ->  Sort  (cost=40387.59..40387.59 rows=1 width=79) (actual time=158.217..158.218 rows=0.33 loops=3)
+              Sort Key: "createdAt" DESC
+              Sort Method: quicksort  Memory: 25kB
+              Buffers: shared hit=50 read=36819
+              Worker 0:  Sort Method: quicksort  Memory: 25kB
+              Worker 1:  Sort Method: quicksort  Memory: 25kB
+              ->  Parallel Bitmap Heap Scan on "Order" o  (cost=2382.69..40387.58 rows=1 width=79) (actual time=133.978..158.098 rows=0.33 loops=3)
+                    Recheck Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                    Filter: (("recipientPhone")::text = '+2348170000267'::text)
+                    Rows Removed by Filter: 71589
+                    Heap Blocks: exact=19856
+                    Buffers: shared hit=37 read=36816
+                    Worker 0:  Heap Blocks: exact=8424
+                    Worker 1:  Heap Blocks: exact=8344
+                    ->  Bitmap Index Scan on "Order_tenantId_qrCodeId_idx"  (cost=0.00..2382.69 rows=214702 width=0) (actual time=25.578..25.578 rows=214767.00 loops=1)
+                          Index Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                          Index Searches: 1
+                          Buffers: shared read=189
+Planning Time: 0.178 ms
+Execution Time: 232.708 ms

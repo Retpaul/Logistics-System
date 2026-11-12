@@ -1,0 +1,26 @@
+-- Q06: Orders page, rider filter (US-17)
+-- Endpoint: GET /orders?riderId=:id
+-- Label: baseline
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."deliveryAddress", o."deliveryFee", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o."riderId" = '91203792-8dc8-3c7c-5827-0a3be5e682dc'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=7135.21..7135.28 rows=25 width=119) (actual time=12.410..12.414 rows=25.00 loops=1)
+  Buffers: shared hit=9462
+  ->  Sort  (cost=7135.21..7140.72 rows=2204 width=119) (actual time=12.409..12.411 rows=25.00 loops=1)
+        Sort Key: "createdAt" DESC
+        Sort Method: top-N heapsort  Memory: 36kB
+        Buffers: shared hit=9462
+        ->  Bitmap Heap Scan on "Order" o  (cost=31.02..7073.02 rows=2204 width=119) (actual time=2.605..9.977 rows=10849.00 loops=1)
+              Recheck Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("riderId" = '91203792-8dc8-3c7c-5827-0a3be5e682dc'::uuid))
+              Heap Blocks: exact=9450
+              Buffers: shared hit=9462
+              ->  Bitmap Index Scan on "Order_tenantId_riderId_idx"  (cost=0.00..30.46 rows=2204 width=0) (actual time=1.509..1.509 rows=10849.00 loops=1)
+                    Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("riderId" = '91203792-8dc8-3c7c-5827-0a3be5e682dc'::uuid))
+                    Index Searches: 1
+                    Buffers: shared hit=12
+Planning Time: 0.136 ms
+Execution Time: 12.506 ms

@@ -1,0 +1,21 @@
+-- Q14: Rider app "My jobs": rider's current assigned / in-progress orders (US-21, polled)
+-- Endpoint: GET /rider/me/jobs
+-- Label: baseline
+
+SELECT o.id, o.status, o."pickupAddress", o."deliveryAddress", o."recipientPhone", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o."riderId" = 'fa056a41-f9a4-a0d3-a786-9db475ecc82e'
+  AND o.status IN ('ASSIGNED', 'PICKED_UP', 'IN_TRANSIT')
+ORDER BY o."createdAt";
+
+Sort  (cost=84.11..84.12 rows=1 width=113) (actual time=0.132..0.133 rows=7 loops=1)
+  Sort Key: "createdAt"
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=54
+  ->  Index Scan using "Order_tenantId_status_createdAt_idx" on "Order" o  (cost=0.42..84.10 rows=1 width=113) (actual time=0.046..0.117 rows=7 loops=1)
+        Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = ANY ('{ASSIGNED,PICKED_UP,IN_TRANSIT}'::"OrderStatus"[])))
+        Filter: ("riderId" = 'fa056a41-f9a4-a0d3-a786-9db475ecc82e'::uuid)
+        Rows Removed by Filter: 44
+        Buffers: shared hit=54
+Planning Time: 0.331 ms
+Execution Time: 0.162 ms

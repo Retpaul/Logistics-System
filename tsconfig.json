@@ -10,5 +10,18 @@
     "skipLibCheck": true,
     "noEmitOnError": true
   },
-  "include": ["app.ts", "config/**/*.ts", "startup/**/*.ts", "repositories/**/*.ts"]
+  "include": [
+    "app.ts",
+    "server.ts",
+    "config/**/*.ts",
+    "contracts/**/*.ts",
+    "controllers/**/*.ts",
+    "lib/**/*.ts",
+    "middleware/**/*.ts",
+    "repositories/**/*.ts",
+    "routes/**/*.ts",
+    "services/**/*.ts",
+    "startup/**/*.ts",
+    "types/**/*.d.ts"
+  ]
 }
