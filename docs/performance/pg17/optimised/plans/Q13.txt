@@ -1,0 +1,21 @@
+-- Q13: Dispatcher search: orders by recipient phone (support call lookup, US-17)
+-- Endpoint: GET /orders?recipientPhone=
+-- Label: optimised
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o."recipientPhone" = '+2348170000267'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=4.90..4.91 rows=3 width=79) (actual time=0.009..0.010 rows=1 loops=1)
+  Buffers: shared hit=4
+  ->  Sort  (cost=4.90..4.91 rows=3 width=79) (actual time=0.009..0.009 rows=1 loops=1)
+        Sort Key: "createdAt" DESC
+        Sort Method: quicksort  Memory: 25kB
+        Buffers: shared hit=4
+        ->  Index Scan using "Order_tenantId_recipientPhone_idx" on "Order" o  (cost=0.42..4.88 rows=3 width=79) (actual time=0.006..0.007 rows=1 loops=1)
+              Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (("recipientPhone")::text = '+2348170000267'::text))
+              Buffers: shared hit=4
+Planning Time: 0.100 ms
+Execution Time: 0.018 ms

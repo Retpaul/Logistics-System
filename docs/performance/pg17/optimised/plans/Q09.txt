@@ -1,0 +1,28 @@
+-- Q09: Analytics "This Week": orders and gross fees per day for the last 7 days (US-18)
+-- Endpoint: GET /analytics/trend?range=7d
+-- Label: optimised
+
+SELECT (o."createdAt" AT TIME ZONE 'Africa/Lagos')::date AS day,
+       count(*) AS orders,
+       sum(o."deliveryFee") AS gross_fees
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o."createdAt" >= now() - interval '7 days'
+GROUP BY 1
+ORDER BY 1;
+
+GroupAggregate  (cost=4228.04..4332.16 rows=3786 width=44) (actual time=7.940..9.683 rows=8 loops=1)
+  Group Key: ((("createdAt" AT TIME ZONE 'Africa/Lagos'::text))::date)
+  Buffers: shared hit=4015
+  ->  Sort  (cost=4228.04..4237.51 rows=3786 width=9) (actual time=7.855..8.228 rows=4233 loops=1)
+        Sort Key: ((("createdAt" AT TIME ZONE 'Africa/Lagos'::text))::date)
+        Sort Method: quicksort  Memory: 325kB
+        Buffers: shared hit=4015
+        ->  Bitmap Heap Scan on "Order" o  (cost=60.14..4003.03 rows=3786 width=9) (actual time=1.525..7.238 rows=4233 loops=1)
+              Recheck Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (now() - '7 days'::interval)))
+              Heap Blocks: exact=3991
+              Buffers: shared hit=4015
+              ->  Bitmap Index Scan on "Order_tenantId_createdAt_idx"  (cost=0.00..59.19 rows=3786 width=0) (actual time=0.821..0.821 rows=4233 loops=1)
+                    Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (now() - '7 days'::interval)))
+                    Buffers: shared hit=24
+Planning Time: 0.195 ms
+Execution Time: 9.895 ms

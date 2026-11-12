@@ -1,0 +1,26 @@
+-- Q14: Rider app "My jobs": rider's current assigned / in-progress orders (US-21, polled)
+-- Endpoint: GET /rider/me/jobs
+-- Label: optimised
+
+SELECT o.id, o.status, o."pickupAddress", o."deliveryAddress", o."recipientPhone", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o."riderId" = 'fa056a41-f9a4-a0d3-a786-9db475ecc82e'
+  AND o.status IN ('ASSIGNED', 'PICKED_UP', 'IN_TRANSIT')
+ORDER BY o."createdAt";
+
+Sort  (cost=247.73..247.73 rows=1 width=113) (actual time=0.069..0.070 rows=7.00 loops=1)
+  Sort Key: "createdAt"
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=54
+  ->  Bitmap Heap Scan on "Order" o  (cost=13.88..247.72 rows=1 width=113) (actual time=0.028..0.064 rows=7.00 loops=1)
+        Recheck Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = ANY ('{ASSIGNED,PICKED_UP,IN_TRANSIT}'::"OrderStatus"[])))
+        Filter: ("riderId" = 'fa056a41-f9a4-a0d3-a786-9db475ecc82e'::uuid)
+        Rows Removed by Filter: 44
+        Heap Blocks: exact=51
+        Buffers: shared hit=54
+        ->  Bitmap Index Scan on "Order_tenantId_status_createdAt_idx"  (cost=0.00..13.88 rows=60 width=0) (actual time=0.012..0.013 rows=51.00 loops=1)
+              Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = ANY ('{ASSIGNED,PICKED_UP,IN_TRANSIT}'::"OrderStatus"[])))
+              Index Searches: 1
+              Buffers: shared hit=3
+Planning Time: 0.142 ms
+Execution Time: 0.084 ms

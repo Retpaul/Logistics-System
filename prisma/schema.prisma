@@ -142,10 +142,13 @@ model Order {
   locations TrackingPoint[]
   payments Payment[]
   @@index([tenantId, status, createdAt])
+  // Query-performance indexes: evidence in docs/PERFORMANCE.md.
+  @@index([tenantId, createdAt])               // newest-first lists, date ranges, KPIs (Q03, Q04, Q08, Q09)
   @@index([tenantId, customerId])
-  @@index([tenantId, riderId])
+  @@index([tenantId, riderId, createdAt])      // replaces (tenantId, riderId): rider filter ordered by date (Q06)
   @@index([tenantId, bikeId])
-  @@index([tenantId, qrCodeId])
+  @@index([tenantId, qrCodeId, createdAt])     // replaces (tenantId, qrCodeId): QR conversions by date (Q11)
+  @@index([tenantId, recipientPhone])          // dispatcher phone search (Q13)
 }
 
 model OrderEvent {
@@ -155,7 +158,7 @@ model OrderEvent {
   note String?
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  @@index([orderId, createdAt])
+  @@index([orderId, status, createdAt])        // replaces (orderId, createdAt): index-only status lookups (Q10)
 }
 
 model TrackingPoint {

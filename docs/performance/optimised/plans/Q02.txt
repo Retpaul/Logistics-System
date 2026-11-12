@@ -1,0 +1,38 @@
+-- Q02: Order detail with customer and status timeline (ordersRepository.findById)
+-- Endpoint: GET /orders/:id
+-- Label: optimised
+
+SELECT o.id, o.status, o."trackingCode", o."deliveryFee", c.name AS customer, c.phone,
+       e.status AS event_status, e."createdAt" AS event_at
+FROM "Order" o
+JOIN "Customer" c ON c."tenantId" = o."tenantId" AND c.id = o."customerId"
+LEFT JOIN "OrderEvent" e ON e."orderId" = o.id
+WHERE o.id = '000035f6-2cc4-1785-a39b-1331175d5bb0' AND o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+ORDER BY e."createdAt";
+
+Sort  (cost=21.75..21.76 rows=7 width=103) (actual time=0.033..0.034 rows=5.00 loops=1)
+  Sort Key: e."createdAt"
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=13
+  ->  Nested Loop Left Join  (cost=1.40..21.65 rows=7 width=103) (actual time=0.023..0.026 rows=5.00 loops=1)
+        Buffers: shared hit=13
+        ->  Nested Loop  (cost=0.84..16.90 rows=1 width=91) (actual time=0.011..0.012 rows=1.00 loops=1)
+              Buffers: shared hit=8
+              ->  Index Scan using "Order_pkey" on "Order" o  (cost=0.42..8.45 rows=1 width=94) (actual time=0.006..0.006 rows=1.00 loops=1)
+                    Index Cond: (id = '000035f6-2cc4-1785-a39b-1331175d5bb0'::uuid)
+                    Filter: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                    Index Searches: 1
+                    Buffers: shared hit=4
+              ->  Index Scan using "Customer_tenantId_id_key" on "Customer" c  (cost=0.42..8.44 rows=1 width=61) (actual time=0.004..0.004 rows=1.00 loops=1)
+                    Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (id = o."customerId"))
+                    Index Searches: 1
+                    Buffers: shared hit=4
+        ->  Index Only Scan using "OrderEvent_orderId_status_createdAt_idx" on "OrderEvent" e  (cost=0.56..4.68 rows=7 width=28) (actual time=0.012..0.013 rows=5.00 loops=1)
+              Index Cond: ("orderId" = '000035f6-2cc4-1785-a39b-1331175d5bb0'::uuid)
+              Heap Fetches: 0
+              Index Searches: 1
+              Buffers: shared hit=5
+Planning:
+  Buffers: shared hit=8
+Planning Time: 0.280 ms
+Execution Time: 0.053 ms

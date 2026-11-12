@@ -1,0 +1,29 @@
+-- Q08: Analytics dashboard KPIs for today: orders, deliveries, revenue, average order value (US-18)
+-- Endpoint: GET /analytics/today
+-- Label: baseline
+
+SELECT count(*) AS orders_today,
+       count(*) FILTER (WHERE o.status = 'DELIVERED') AS delivered_today,
+       coalesce(sum(p.amount), 0) AS revenue_today,
+       round(avg(o."deliveryFee"), 2) AS avg_order_value
+FROM "Order" o
+LEFT JOIN "Payment" p ON p."orderId" = o.id AND p.status = 'PAID'
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+  AND o."createdAt" >= date_trunc('day', now() AT TIME ZONE 'Africa/Lagos') AT TIME ZONE 'Africa/Lagos';
+
+Aggregate  (cost=4791.99..4792.01 rows=1 width=80) (actual time=12.243..12.244 rows=1 loops=1)
+  Buffers: shared hit=2901
+  ->  Nested Loop Left Join  (cost=0.86..4789.49 rows=200 width=14) (actual time=0.032..12.073 rows=240 loops=1)
+        Buffers: shared hit=2901
+        ->  Index Scan using "Order_tenantId_status_createdAt_idx" on "Order" o  (cost=0.43..4262.89 rows=200 width=25) (actual time=0.014..10.600 rows=240 loops=1)
+              Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND ("createdAt" >= (date_trunc('day'::text, (now() AT TIME ZONE 'Africa/Lagos'::text)) AT TIME ZONE 'Africa/Lagos'::text)))
+              Buffers: shared hit=1936
+        ->  Index Scan using "Payment_orderId_idx" on "Payment" p  (cost=0.42..2.62 rows=1 width=21) (actual time=0.005..0.005 rows=1 loops=240)
+              Index Cond: ("orderId" = o.id)
+              Filter: (status = 'PAID'::"PaymentStatus")
+              Rows Removed by Filter: 0
+              Buffers: shared hit=965
+Planning:
+  Buffers: shared hit=16
+Planning Time: 0.455 ms
+Execution Time: 12.289 ms

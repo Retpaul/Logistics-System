@@ -1,0 +1,1278 @@
+{
+  "label": "optimised",
+  "capturedAt": "2026-11-12T09:28:50.303Z",
+  "runs": 50,
+  "warmup": 5,
+  "settings": [
+    {
+      "name": "effective_cache_size",
+      "setting": "4GB"
+    },
+    {
+      "name": "jit",
+      "setting": "on"
+    },
+    {
+      "name": "max_parallel_workers_per_gather",
+      "setting": "2"
+    },
+    {
+      "name": "random_page_cost",
+      "setting": "4"
+    },
+    {
+      "name": "server_version",
+      "setting": "18.6"
+    },
+    {
+      "name": "shared_buffers",
+      "setting": "128MB"
+    },
+    {
+      "name": "work_mem",
+      "setting": "4MB"
+    }
+  ],
+  "results": [
+    {
+      "id": "Q01",
+      "title": "Public tracking page: order, tenant branding, latest GPS point (US-09, polled every 10 s)",
+      "endpoint": "GET /track/:trackingCode",
+      "rows": 1,
+      "sample": [
+        {
+          "id": "cccec4b4-4ed0-f57d-0a2d-caccf5101dbb",
+          "status": "IN_TRANSIT",
+          "deliveryAddress": "174 Herbert Macaulay Way, Yaba, Lagos",
+          "recipientName": "Recipient 4154",
+          "createdAt": "2026-11-12T06:20:23.500Z",
+          "tenant_name": "Lagos Express",
+          "brandColor": "#00a941",
+          "latitude": "6.345997",
+          "longitude": "3.362842",
+          "last_seen_at": "2026-11-12T09:12:49.118Z"
+        }
+      ],
+      "planningMs": 0.314,
+      "executionMs": 0.157,
+      "sharedHit": 10,
+      "sharedRead": 0,
+      "p50": 0.738,
+      "p95": 1.049,
+      "min": 0.664,
+      "max": 1.414,
+      "planNodes": [
+        "Nested Loop",
+        "Hash Join",
+        "Seq Scan on Tenant",
+        "Hash",
+        "Index Scan on Order_trackingCode_key",
+        "Limit",
+        "Index Scan on TrackingPoint_orderId_recordedAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_trackingCode_key",
+        "TrackingPoint_orderId_recordedAt_idx"
+      ]
+    },
+    {
+      "id": "Q02",
+      "title": "Order detail with customer and status timeline (ordersRepository.findById)",
+      "endpoint": "GET /orders/:id",
+      "rows": 5,
+      "sample": [
+        {
+          "id": "000035f6-2cc4-1785-a39b-1331175d5bb0",
+          "status": "DELIVERED",
+          "trackingCode": "1d448be8-037b-036b-8601-e772c7ad3264",
+          "deliveryFee": "2373.00",
+          "customer": "Customer 20400",
+          "phone": "+2348000020400",
+          "event_status": "PENDING",
+          "event_at": "2026-09-04T14:42:43.470Z"
+        },
+        {
+          "id": "000035f6-2cc4-1785-a39b-1331175d5bb0",
+          "status": "DELIVERED",
+          "trackingCode": "1d448be8-037b-036b-8601-e772c7ad3264",
+          "deliveryFee": "2373.00",
+          "customer": "Customer 20400",
+          "phone": "+2348000020400",
+          "event_status": "ASSIGNED",
+          "event_at": "2026-09-04T14:47:18.629Z"
+        },
+        {
+          "id": "000035f6-2cc4-1785-a39b-1331175d5bb0",
+          "status": "DELIVERED",
+          "trackingCode": "1d448be8-037b-036b-8601-e772c7ad3264",
+          "deliveryFee": "2373.00",
+          "customer": "Customer 20400",
+          "phone": "+2348000020400",
+          "event_status": "PICKED_UP",
+          "event_at": "2026-09-04T15:09:19.049Z"
+        },
+        {
+          "id": "000035f6-2cc4-1785-a39b-1331175d5bb0",
+          "status": "DELIVERED",
+          "trackingCode": "1d448be8-037b-036b-8601-e772c7ad3264",
+          "deliveryFee": "2373.00",
+          "customer": "Customer 20400",
+          "phone": "+2348000020400",
+          "event_status": "IN_TRANSIT",
+          "event_at": "2026-09-04T15:10:19.049Z"
+        },
+        {
+          "id": "000035f6-2cc4-1785-a39b-1331175d5bb0",
+          "status": "DELIVERED",
+          "trackingCode": "1d448be8-037b-036b-8601-e772c7ad3264",
+          "deliveryFee": "2373.00",
+          "customer": "Customer 20400",
+          "phone": "+2348000020400",
+          "event_status": "DELIVERED",
+          "event_at": "2026-09-04T15:37:23.161Z"
+        }
+      ],
+      "planningMs": 0.288,
+      "executionMs": 0.049,
+      "sharedHit": 13,
+      "sharedRead": 0,
+      "p50": 0.769,
+      "p95": 1.434,
+      "min": 0.728,
+      "max": 1.795,
+      "planNodes": [
+        "Sort (quicksort)",
+        "Nested Loop",
+        "Nested Loop",
+        "Index Scan on Order_pkey",
+        "Index Scan on Customer_tenantId_id_key",
+        "Index Only Scan on OrderEvent_orderId_status_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_pkey",
+        "Customer_tenantId_id_key",
+        "OrderEvent_orderId_status_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q03",
+      "title": "Orders page, default view: newest 25 orders for the tenant (US-17)",
+      "endpoint": "GET /orders?limit=25",
+      "rows": 25,
+      "sample": [
+        {
+          "id": "160cb746-4424-fc19-bdca-55efe338a2db",
+          "trackingCode": "08c019a3-aee6-044c-ba7d-03754ef07d6e",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 1374",
+          "deliveryAddress": "168 Akin Adesola, Victoria Island, Lagos",
+          "deliveryFee": "3182.00",
+          "createdAt": "2026-11-12T09:08:47.990Z"
+        },
+        {
+          "id": "426e8e01-7bf7-ce6f-d308-0ee623d91950",
+          "trackingCode": "fe6ce26a-73b8-ebe9-b593-670bfbe963b5",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 1649",
+          "deliveryAddress": "115 Isaac John, GRA Ikeja, Lagos",
+          "deliveryFee": "3882.00",
+          "createdAt": "2026-11-12T09:07:00.435Z"
+        },
+        {
+          "id": "ba3c9b43-2ee8-495c-0536-ef1f6165523b",
+          "trackingCode": "595fcdbb-1453-bc87-1d86-3073cb7146e5",
+          "status": "ASSIGNED",
+          "recipientName": "Recipient 3618",
+          "deliveryAddress": "133 Allen Avenue, Ikeja, Lagos",
+          "deliveryFee": "3780.00",
+          "createdAt": "2026-11-12T09:06:29.594Z"
+        },
+        {
+          "id": "26e2f264-89a0-c6b1-7b9d-bb0857206467",
+          "trackingCode": "a8a718c4-7db4-159f-0584-59414c25ba3b",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 1456",
+          "deliveryAddress": "35 Herbert Macaulay Way, Yaba, Lagos",
+          "deliveryFee": "2373.00",
+          "createdAt": "2026-11-12T09:06:29.438Z"
+        },
+        {
+          "id": "ebfcf206-d0e6-2d6c-75b9-602f4f3e10b5",
+          "trackingCode": "bf5f50f8-8e88-a842-6b93-bb67a4223d9c",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 628",
+          "deliveryAddress": "134 Ozumba Mbadiwe, Victoria Island, Lagos",
+          "deliveryFee": "1698.00",
+          "createdAt": "2026-11-12T09:05:33.422Z"
+        }
+      ],
+      "planningMs": 0.103,
+      "executionMs": 0.034,
+      "sharedHit": 28,
+      "sharedRead": 0,
+      "p50": 0.611,
+      "p95": 0.952,
+      "min": 0.537,
+      "max": 1.316,
+      "planNodes": [
+        "Limit",
+        "Index Scan on Order_tenantId_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q04",
+      "title": "Orders page, \"Today\" filter, Lagos local day (US-17)",
+      "endpoint": "GET /orders?date=today",
+      "rows": 25,
+      "sample": [
+        {
+          "id": "160cb746-4424-fc19-bdca-55efe338a2db",
+          "trackingCode": "08c019a3-aee6-044c-ba7d-03754ef07d6e",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 1374",
+          "deliveryAddress": "168 Akin Adesola, Victoria Island, Lagos",
+          "deliveryFee": "3182.00",
+          "createdAt": "2026-11-12T09:08:47.990Z"
+        },
+        {
+          "id": "426e8e01-7bf7-ce6f-d308-0ee623d91950",
+          "trackingCode": "fe6ce26a-73b8-ebe9-b593-670bfbe963b5",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 1649",
+          "deliveryAddress": "115 Isaac John, GRA Ikeja, Lagos",
+          "deliveryFee": "3882.00",
+          "createdAt": "2026-11-12T09:07:00.435Z"
+        },
+        {
+          "id": "ba3c9b43-2ee8-495c-0536-ef1f6165523b",
+          "trackingCode": "595fcdbb-1453-bc87-1d86-3073cb7146e5",
+          "status": "ASSIGNED",
+          "recipientName": "Recipient 3618",
+          "deliveryAddress": "133 Allen Avenue, Ikeja, Lagos",
+          "deliveryFee": "3780.00",
+          "createdAt": "2026-11-12T09:06:29.594Z"
+        },
+        {
+          "id": "26e2f264-89a0-c6b1-7b9d-bb0857206467",
+          "trackingCode": "a8a718c4-7db4-159f-0584-59414c25ba3b",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 1456",
+          "deliveryAddress": "35 Herbert Macaulay Way, Yaba, Lagos",
+          "deliveryFee": "2373.00",
+          "createdAt": "2026-11-12T09:06:29.438Z"
+        },
+        {
+          "id": "ebfcf206-d0e6-2d6c-75b9-602f4f3e10b5",
+          "trackingCode": "bf5f50f8-8e88-a842-6b93-bb67a4223d9c",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 628",
+          "deliveryAddress": "134 Ozumba Mbadiwe, Victoria Island, Lagos",
+          "deliveryFee": "1698.00",
+          "createdAt": "2026-11-12T09:05:33.422Z"
+        }
+      ],
+      "planningMs": 0.135,
+      "executionMs": 0.039,
+      "sharedHit": 28,
+      "sharedRead": 0,
+      "p50": 0.618,
+      "p95": 1.149,
+      "min": 0.548,
+      "max": 1.385,
+      "planNodes": [
+        "Limit",
+        "Index Scan on Order_tenantId_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q05",
+      "title": "Orders page, status filter \"Delivered\" (US-17)",
+      "endpoint": "GET /orders?status=DELIVERED",
+      "rows": 25,
+      "sample": [
+        {
+          "id": "dd4fc9b0-fbb8-37f7-c0ad-c7ba4da0b3e6",
+          "trackingCode": "35425fb9-ccdf-dc43-c90a-d57734011237",
+          "status": "DELIVERED",
+          "recipientName": "Recipient 4145",
+          "deliveryAddress": "167 Herbert Macaulay Way, Yaba, Lagos",
+          "deliveryFee": "3230.00",
+          "createdAt": "2026-11-12T08:32:26.298Z"
+        },
+        {
+          "id": "e486b4f4-eda2-bc85-8864-2c57072c11f6",
+          "trackingCode": "8bd63b9f-b038-a0d0-59f0-5066cd0ec6ce",
+          "status": "DELIVERED",
+          "recipientName": "Recipient 3935",
+          "deliveryAddress": "151 Ozumba Mbadiwe, Victoria Island, Lagos",
+          "deliveryFee": "1935.00",
+          "createdAt": "2026-11-12T08:30:10.423Z"
+        },
+        {
+          "id": "fe29a0ba-53de-565d-c199-31c36a8ac99c",
+          "trackingCode": "ab51c244-1ccd-658e-47ca-a2db91d54f68",
+          "status": "DELIVERED",
+          "recipientName": "Recipient 2097",
+          "deliveryAddress": "62 Bode Thomas, Surulere, Lagos",
+          "deliveryFee": "2272.00",
+          "createdAt": "2026-11-12T08:03:36.979Z"
+        },
+        {
+          "id": "ce22218f-0a87-7b90-ffa7-5471a86d6d62",
+          "trackingCode": "9af61205-19f4-3eea-77a3-d6b682bdd4e0",
+          "status": "DELIVERED",
+          "recipientName": "Recipient 1597",
+          "deliveryAddress": "180 Isaac John, GRA Ikeja, Lagos",
+          "deliveryFee": "4599.00",
+          "createdAt": "2026-11-12T07:47:02.085Z"
+        },
+        {
+          "id": "b295a6cb-84de-a735-6250-f1af52f482b8",
+          "trackingCode": "0515a3e8-c263-8ab2-ddb4-e1918ea0eb84",
+          "status": "DELIVERED",
+          "recipientName": "Recipient 3827",
+          "deliveryAddress": "152 Akin Adesola, Victoria Island, Lagos",
+          "deliveryFee": "4051.00",
+          "createdAt": "2026-11-12T06:56:15.600Z"
+        }
+      ],
+      "planningMs": 0.187,
+      "executionMs": 0.093,
+      "sharedHit": 97,
+      "sharedRead": 0,
+      "p50": 0.587,
+      "p95": 0.809,
+      "min": 0.531,
+      "max": 2.361,
+      "planNodes": [
+        "Limit",
+        "Index Scan on Order_tenantId_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q06",
+      "title": "Orders page, rider filter (US-17)",
+      "endpoint": "GET /orders?riderId=:id",
+      "rows": 25,
+      "sample": [
+        {
+          "id": "ba3c9b43-2ee8-495c-0536-ef1f6165523b",
+          "trackingCode": "595fcdbb-1453-bc87-1d86-3073cb7146e5",
+          "status": "ASSIGNED",
+          "recipientName": "Recipient 3618",
+          "deliveryAddress": "133 Allen Avenue, Ikeja, Lagos",
+          "deliveryFee": "3780.00",
+          "createdAt": "2026-11-12T09:06:29.594Z"
+        },
+        {
+          "id": "213e09be-5f20-9e72-db11-309c5e9f9764",
+          "trackingCode": "2b9d5487-0a5e-7a54-da21-fa584eb99b73",
+          "status": "CANCELLED",
+          "recipientName": "Recipient 3490",
+          "deliveryAddress": "18 Ago Palace Way, Okota, Lagos",
+          "deliveryFee": "4570.00",
+          "createdAt": "2026-11-12T08:29:31.318Z"
+        },
+        {
+          "id": "ce22218f-0a87-7b90-ffa7-5471a86d6d62",
+          "trackingCode": "9af61205-19f4-3eea-77a3-d6b682bdd4e0",
+          "status": "DELIVERED",
+          "recipientName": "Recipient 1597",
+          "deliveryAddress": "180 Isaac John, GRA Ikeja, Lagos",
+          "deliveryFee": "4599.00",
+          "createdAt": "2026-11-12T07:47:02.085Z"
+        },
+        {
+          "id": "6e164262-be70-2f09-eb5e-fe2f07fb2fd9",
+          "trackingCode": "bae8a1f8-230f-9daf-dba6-d012257a2cac",
+          "status": "IN_TRANSIT",
+          "recipientName": "Recipient 4178",
+          "deliveryAddress": "147 Adeola Odeku, Victoria Island, Lagos",
+          "deliveryFee": "2176.00",
+          "createdAt": "2026-11-12T07:20:14.976Z"
+        },
+        {
+          "id": "4de3d692-f975-0c62-1bb4-99f03fcddd9e",
+          "trackingCode": "c16b693a-ef91-bd05-65b8-dacc2b2d6897",
+          "status": "DELIVERED",
+          "recipientName": "Recipient 1327",
+          "deliveryAddress": "179 Opebi Road, Ikeja, Lagos",
+          "deliveryFee": "2379.00",
+          "createdAt": "2026-11-12T06:10:29.796Z"
+        }
+      ],
+      "planningMs": 0.11,
+      "executionMs": 0.033,
+      "sharedHit": 29,
+      "sharedRead": 0,
+      "p50": 0.501,
+      "p95": 0.681,
+      "min": 0.475,
+      "max": 1.497,
+      "planNodes": [
+        "Limit",
+        "Index Scan on Order_tenantId_riderId_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_riderId_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q07",
+      "title": "Fleet map: all active orders for the tenant (US-16)",
+      "endpoint": "GET /dispatch/active-orders",
+      "rows": 65,
+      "sample": [
+        {
+          "id": "160cb746-4424-fc19-bdca-55efe338a2db",
+          "status": "IN_TRANSIT",
+          "riderId": "3e602b06-a375-75fd-5869-1ab19efd0728",
+          "pickupAddress": "193 Allen Avenue, Ikeja, Lagos",
+          "deliveryAddress": "168 Akin Adesola, Victoria Island, Lagos",
+          "createdAt": "2026-11-12T09:08:47.990Z"
+        },
+        {
+          "id": "426e8e01-7bf7-ce6f-d308-0ee623d91950",
+          "status": "IN_TRANSIT",
+          "riderId": "9a4f4228-fb1a-5ca8-5dde-c6c330f8614e",
+          "pickupAddress": "10 Allen Avenue, Ikeja, Lagos",
+          "deliveryAddress": "115 Isaac John, GRA Ikeja, Lagos",
+          "createdAt": "2026-11-12T09:07:00.435Z"
+        },
+        {
+          "id": "ba3c9b43-2ee8-495c-0536-ef1f6165523b",
+          "status": "ASSIGNED",
+          "riderId": "91203792-8dc8-3c7c-5827-0a3be5e682dc",
+          "pickupAddress": "93 Bode Thomas, Surulere, Lagos",
+          "deliveryAddress": "133 Allen Avenue, Ikeja, Lagos",
+          "createdAt": "2026-11-12T09:06:29.594Z"
+        },
+        {
+          "id": "26e2f264-89a0-c6b1-7b9d-bb0857206467",
+          "status": "IN_TRANSIT",
+          "riderId": "e7ca2f50-1962-e3dd-f71f-a46145d8e13e",
+          "pickupAddress": "171 Akin Adesola, Victoria Island, Lagos",
+          "deliveryAddress": "35 Herbert Macaulay Way, Yaba, Lagos",
+          "createdAt": "2026-11-12T09:06:29.438Z"
+        },
+        {
+          "id": "ebfcf206-d0e6-2d6c-75b9-602f4f3e10b5",
+          "status": "IN_TRANSIT",
+          "riderId": "df17dc28-5066-b740-2132-2c26972142bc",
+          "pickupAddress": "164 Allen Avenue, Ikeja, Lagos",
+          "deliveryAddress": "134 Ozumba Mbadiwe, Victoria Island, Lagos",
+          "createdAt": "2026-11-12T09:05:33.422Z"
+        }
+      ],
+      "planningMs": 0.118,
+      "executionMs": 0.109,
+      "sharedHit": 69,
+      "sharedRead": 0,
+      "p50": 0.817,
+      "p95": 1.533,
+      "min": 0.751,
+      "max": 2.053,
+      "planNodes": [
+        "Limit",
+        "Sort (quicksort)",
+        "Bitmap Heap Scan on Order",
+        "Bitmap Index Scan on Order_tenantId_status_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_status_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q08",
+      "title": "Analytics dashboard KPIs for today: orders, deliveries, revenue, average order value (US-18)",
+      "endpoint": "GET /analytics/today",
+      "rows": 1,
+      "sample": [
+        {
+          "orders_today": "265",
+          "delivered_today": "189",
+          "revenue_today": "784575.00",
+          "avg_order_value": "3279.34"
+        }
+      ],
+      "planningMs": 0.251,
+      "executionMs": 0.923,
+      "sharedHit": 1332,
+      "sharedRead": 0,
+      "p50": 1.698,
+      "p95": 2.042,
+      "min": 1.485,
+      "max": 2.279,
+      "planNodes": [
+        "Aggregate",
+        "Nested Loop",
+        "Bitmap Heap Scan on Order",
+        "Bitmap Index Scan on Order_tenantId_createdAt_idx",
+        "Index Scan on Payment_orderId_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_createdAt_idx",
+        "Payment_orderId_idx"
+      ]
+    },
+    {
+      "id": "Q09",
+      "title": "Analytics \"This Week\": orders and gross fees per day for the last 7 days (US-18)",
+      "endpoint": "GET /analytics/trend?range=7d",
+      "rows": 8,
+      "sample": [
+        {
+          "day": "2026-11-04T23:00:00.000Z",
+          "orders": "344",
+          "gross_fees": "1136086.00"
+        },
+        {
+          "day": "2026-11-05T23:00:00.000Z",
+          "orders": "632",
+          "gross_fees": "2029347.00"
+        },
+        {
+          "day": "2026-11-06T23:00:00.000Z",
+          "orders": "606",
+          "gross_fees": "1953411.00"
+        },
+        {
+          "day": "2026-11-07T23:00:00.000Z",
+          "orders": "557",
+          "gross_fees": "1848063.00"
+        },
+        {
+          "day": "2026-11-08T23:00:00.000Z",
+          "orders": "615",
+          "gross_fees": "2018389.00"
+        }
+      ],
+      "planningMs": 0.2,
+      "executionMs": 7.41,
+      "sharedHit": 4020,
+      "sharedRead": 0,
+      "p50": 7.745,
+      "p95": 9.574,
+      "min": 7.097,
+      "max": 12.77,
+      "planNodes": [
+        "Aggregate",
+        "Sort (quicksort)",
+        "Bitmap Heap Scan on Order",
+        "Bitmap Index Scan on Order_tenantId_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q10",
+      "title": "Rider leaderboard, last 30 days: deliveries and average pickup-to-drop minutes (US-18)",
+      "endpoint": "GET /analytics/riders",
+      "rows": 10,
+      "sample": [
+        {
+          "rider": "Rider 1600",
+          "deliveries": "859",
+          "avg_minutes": "30.6"
+        },
+        {
+          "rider": "Rider 900",
+          "deliveries": "853",
+          "avg_minutes": "31.0"
+        },
+        {
+          "rider": "Rider 200",
+          "deliveries": "843",
+          "avg_minutes": "30.7"
+        },
+        {
+          "rider": "Rider 600",
+          "deliveries": "841",
+          "avg_minutes": "30.9"
+        },
+        {
+          "rider": "Rider 500",
+          "deliveries": "837",
+          "avg_minutes": "31.0"
+        }
+      ],
+      "planningMs": 2.54,
+      "executionMs": 368.946,
+      "sharedHit": 118831,
+      "sharedRead": 25713,
+      "p50": 335.655,
+      "p95": 459.997,
+      "min": 305.529,
+      "max": 545.743,
+      "planNodes": [
+        "Limit",
+        "Sort (quicksort)",
+        "Aggregate",
+        "Gather Merge",
+        "Aggregate",
+        "Merge Join",
+        "Sort (quicksort)",
+        "Hash Join",
+        "Nested Loop",
+        "Nested Loop",
+        "Bitmap Heap Scan on Order",
+        "Bitmap Index Scan on Order_tenantId_status_createdAt_idx",
+        "Index Only Scan on OrderEvent_orderId_status_createdAt_idx",
+        "Index Only Scan on OrderEvent_orderId_status_createdAt_idx",
+        "Hash",
+        "Bitmap Heap Scan on Rider",
+        "Bitmap Index Scan on Rider_tenantId_id_key",
+        "Sort (quicksort)",
+        "Bitmap Heap Scan on User",
+        "Bitmap Index Scan on User_tenantId_id_key"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_status_createdAt_idx",
+        "OrderEvent_orderId_status_createdAt_idx",
+        "Rider_tenantId_id_key",
+        "User_tenantId_id_key"
+      ]
+    },
+    {
+      "id": "Q11",
+      "title": "QR analytics, last 30 days: scans, orders and conversion per QR code (US-05)",
+      "endpoint": "GET /qr-codes/analytics?range=30d",
+      "rows": 10,
+      "sample": [
+        {
+          "label": "QR 600",
+          "campaign": "Summer2026",
+          "scans": "4403",
+          "orders": "1111",
+          "conversion_pct": "25.2"
+        },
+        {
+          "label": "QR 800",
+          "campaign": null,
+          "scans": "4379",
+          "orders": "1102",
+          "conversion_pct": "25.2"
+        },
+        {
+          "label": "QR 400",
+          "campaign": "Launch",
+          "scans": "4357",
+          "orders": "1100",
+          "conversion_pct": "25.2"
+        },
+        {
+          "label": "QR 300",
+          "campaign": "Summer2026",
+          "scans": "4449",
+          "orders": "1077",
+          "conversion_pct": "24.2"
+        },
+        {
+          "label": "QR 700",
+          "campaign": "Launch",
+          "scans": "4481",
+          "orders": "1077",
+          "conversion_pct": "24.0"
+        }
+      ],
+      "planningMs": 0.358,
+      "executionMs": 10.505,
+      "sharedHit": 2461,
+      "sharedRead": 0,
+      "p50": 7.74,
+      "p95": 9.603,
+      "min": 6.505,
+      "max": 12.277,
+      "planNodes": [
+        "Sort (quicksort)",
+        "Nested Loop",
+        "Nested Loop",
+        "Bitmap Heap Scan on QrCode",
+        "Bitmap Index Scan on QrCode_tenantId_id_key",
+        "Aggregate",
+        "Index Only Scan on QrScan_qrCodeId_scannedAt_idx",
+        "Aggregate",
+        "Index Only Scan on Order_tenantId_qrCodeId_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "QrCode_tenantId_id_key",
+        "QrScan_qrCodeId_scannedAt_idx",
+        "Order_tenantId_qrCodeId_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q12",
+      "title": "Manual order entry: find existing customer by phone (US-07)",
+      "endpoint": "GET /customers?phone=",
+      "rows": 1,
+      "sample": [
+        {
+          "id": "5db2d12c-8faa-d9e4-9884-e367696d47ef",
+          "name": "Customer 0",
+          "phone": "+2348000000000",
+          "email": "customer0@example.test"
+        }
+      ],
+      "planningMs": 0.062,
+      "executionMs": 0.021,
+      "sharedHit": 4,
+      "sharedRead": 0,
+      "p50": 0.305,
+      "p95": 0.454,
+      "min": 0.251,
+      "max": 0.813,
+      "planNodes": [
+        "Index Scan on Customer_tenantId_phone_idx"
+      ],
+      "indexesUsed": [
+        "Customer_tenantId_phone_idx"
+      ]
+    },
+    {
+      "id": "Q13",
+      "title": "Dispatcher search: orders by recipient phone (support call lookup, US-17)",
+      "endpoint": "GET /orders?recipientPhone=",
+      "rows": 1,
+      "sample": [
+        {
+          "id": "34744898-ac8d-a482-98a4-a68bebad97f7",
+          "trackingCode": "1dbed0d6-35ca-54c7-924d-22e0016bd611",
+          "status": "DELIVERED",
+          "recipientName": "Recipient 4591",
+          "createdAt": "2026-01-12T15:57:05.397Z"
+        }
+      ],
+      "planningMs": 0.125,
+      "executionMs": 0.029,
+      "sharedHit": 4,
+      "sharedRead": 0,
+      "p50": 0.406,
+      "p95": 0.724,
+      "min": 0.347,
+      "max": 1.393,
+      "planNodes": [
+        "Limit",
+        "Sort (quicksort)",
+        "Index Scan on Order_tenantId_recipientPhone_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_recipientPhone_idx"
+      ]
+    },
+    {
+      "id": "Q14",
+      "title": "Rider app \"My jobs\": rider's current assigned / in-progress orders (US-21, polled)",
+      "endpoint": "GET /rider/me/jobs",
+      "rows": 7,
+      "sample": [
+        {
+          "id": "a128989e-e738-34d0-43cd-bbfb82f9cd8b",
+          "status": "PICKED_UP",
+          "pickupAddress": "98 Adetokunbo Ademola, Victoria Island, Lagos",
+          "deliveryAddress": "170 Adetokunbo Ademola, Victoria Island, Lagos",
+          "recipientPhone": "+2348000071900",
+          "createdAt": "2026-11-12T06:29:50.379Z"
+        },
+        {
+          "id": "46f70856-f5e0-6eba-a47f-8e86f478086d",
+          "status": "IN_TRANSIT",
+          "pickupAddress": "171 Isaac John, GRA Ikeja, Lagos",
+          "deliveryAddress": "26 Ozumba Mbadiwe, Victoria Island, Lagos",
+          "recipientPhone": "+2348000099300",
+          "createdAt": "2026-11-12T06:42:33.623Z"
+        },
+        {
+          "id": "8e102b7b-7552-532a-459a-0fb3246c0894",
+          "status": "IN_TRANSIT",
+          "pickupAddress": "32 Herbert Macaulay Way, Yaba, Lagos",
+          "deliveryAddress": "179 Opebi Road, Ikeja, Lagos",
+          "recipientPhone": "+2348000097000",
+          "createdAt": "2026-11-12T07:05:26.175Z"
+        },
+        {
+          "id": "66b118fb-5d65-7249-0ea4-c420eee6bfc2",
+          "status": "IN_TRANSIT",
+          "pickupAddress": "63 Allen Avenue, Ikeja, Lagos",
+          "deliveryAddress": "16 Herbert Macaulay Way, Yaba, Lagos",
+          "recipientPhone": "+2348000051700",
+          "createdAt": "2026-11-12T07:10:53.705Z"
+        },
+        {
+          "id": "7577463a-3572-e9d5-5cbb-373971abeab2",
+          "status": "IN_TRANSIT",
+          "pickupAddress": "93 Ozumba Mbadiwe, Victoria Island, Lagos",
+          "deliveryAddress": "32 Allen Avenue, Ikeja, Lagos",
+          "recipientPhone": "+2348000053000",
+          "createdAt": "2026-11-12T08:01:40.124Z"
+        }
+      ],
+      "planningMs": 0.139,
+      "executionMs": 0.076,
+      "sharedHit": 54,
+      "sharedRead": 0,
+      "p50": 0.595,
+      "p95": 1.161,
+      "min": 0.427,
+      "max": 1.506,
+      "planNodes": [
+        "Sort (quicksort)",
+        "Bitmap Heap Scan on Order",
+        "Bitmap Index Scan on Order_tenantId_status_createdAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_status_createdAt_idx"
+      ]
+    },
+    {
+      "id": "Q15",
+      "title": "Fleet map: latest GPS position of every order on the road (US-16)",
+      "endpoint": "GET /dispatch/live-positions",
+      "rows": 33,
+      "sample": [
+        {
+          "id": "7577463a-3572-e9d5-5cbb-373971abeab2",
+          "riderId": "fa056a41-f9a4-a0d3-a786-9db475ecc82e",
+          "status": "IN_TRANSIT",
+          "latitude": "6.441345",
+          "longitude": "3.293030",
+          "recordedAt": "2026-11-12T09:12:49.118Z"
+        },
+        {
+          "id": "02929b5f-a56e-4797-ad17-df8f604e3c48",
+          "riderId": "e7ca2f50-1962-e3dd-f71f-a46145d8e13e",
+          "status": "IN_TRANSIT",
+          "latitude": "6.501462",
+          "longitude": "3.278517",
+          "recordedAt": "2026-11-12T09:12:49.118Z"
+        },
+        {
+          "id": "a620d6a6-7c62-d2e1-8102-a89c693a2a44",
+          "riderId": "933cd747-4ab5-8485-42e3-62fa4a4bd070",
+          "status": "IN_TRANSIT",
+          "latitude": "6.598098",
+          "longitude": "3.510234",
+          "recordedAt": "2026-11-12T09:12:49.118Z"
+        },
+        {
+          "id": "715964f8-6fe5-a3e7-e296-c66dd817a462",
+          "riderId": "e7ca2f50-1962-e3dd-f71f-a46145d8e13e",
+          "status": "IN_TRANSIT",
+          "latitude": "6.308435",
+          "longitude": "3.515661",
+          "recordedAt": "2026-11-12T09:12:49.118Z"
+        },
+        {
+          "id": "84645cb1-931d-05e5-8195-491180d5af0a",
+          "riderId": "cd39f32a-bf70-e44b-579b-497075b6c6b6",
+          "status": "IN_TRANSIT",
+          "latitude": "6.423254",
+          "longitude": "3.462376",
+          "recordedAt": "2026-11-12T09:12:49.118Z"
+        }
+      ],
+      "planningMs": 0.158,
+      "executionMs": 0.244,
+      "sharedHit": 208,
+      "sharedRead": 0,
+      "p50": 0.986,
+      "p95": 2.136,
+      "min": 0.761,
+      "max": 2.358,
+      "planNodes": [
+        "Nested Loop",
+        "Bitmap Heap Scan on Order",
+        "Bitmap Index Scan on Order_tenantId_status_createdAt_idx",
+        "Limit",
+        "Index Scan on TrackingPoint_orderId_recordedAt_idx"
+      ],
+      "indexesUsed": [
+        "Order_tenantId_status_createdAt_idx",
+        "TrackingPoint_orderId_recordedAt_idx"
+      ]
+    }
+  ],
+  "write": {
+    "rows": 10000,
+    "medianMs": 1051.897,
+    "perRowUs": 105.19
+  },
+  "indexes": [
+    {
+      "table": "Bike",
+      "index": "Bike_pkey",
+      "bytes": "90112",
+      "size": "88 kB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"Bike_pkey\" ON public.\"Bike\" USING btree (id)"
+    },
+    {
+      "table": "Bike",
+      "index": "Bike_tenantId_id_key",
+      "bytes": "163840",
+      "size": "160 kB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"Bike_tenantId_id_key\" ON public.\"Bike\" USING btree (\"tenantId\", id)"
+    },
+    {
+      "table": "Bike",
+      "index": "Bike_tenantId_serialNumber_key",
+      "bytes": "163840",
+      "size": "160 kB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"Bike_tenantId_serialNumber_key\" ON public.\"Bike\" USING btree (\"tenantId\", \"serialNumber\")"
+    },
+    {
+      "table": "Customer",
+      "index": "Customer_pkey",
+      "bytes": "4423680",
+      "size": "4320 kB",
+      "scans": "116",
+      "definition": "CREATE UNIQUE INDEX \"Customer_pkey\" ON public.\"Customer\" USING btree (id)"
+    },
+    {
+      "table": "Customer",
+      "index": "Customer_tenantId_id_key",
+      "bytes": "6422528",
+      "size": "6272 kB",
+      "scans": "50058",
+      "definition": "CREATE UNIQUE INDEX \"Customer_tenantId_id_key\" ON public.\"Customer\" USING btree (\"tenantId\", id)"
+    },
+    {
+      "table": "Customer",
+      "index": "Customer_tenantId_phone_idx",
+      "bytes": "8511488",
+      "size": "8312 kB",
+      "scans": "58",
+      "definition": "CREATE INDEX \"Customer_tenantId_phone_idx\" ON public.\"Customer\" USING btree (\"tenantId\", phone)"
+    },
+    {
+      "table": "Order",
+      "index": "Order_pkey",
+      "bytes": "40345600",
+      "size": "38 MB",
+      "scans": "406",
+      "definition": "CREATE UNIQUE INDEX \"Order_pkey\" ON public.\"Order\" USING btree (id)"
+    },
+    {
+      "table": "Order",
+      "index": "Order_tenantId_bikeId_idx",
+      "bytes": "9707520",
+      "size": "9480 kB",
+      "scans": "0",
+      "definition": "CREATE INDEX \"Order_tenantId_bikeId_idx\" ON public.\"Order\" USING btree (\"tenantId\", \"bikeId\")"
+    },
+    {
+      "table": "Order",
+      "index": "Order_tenantId_createdAt_idx",
+      "bytes": "40984576",
+      "size": "39 MB",
+      "scans": "290",
+      "definition": "CREATE INDEX \"Order_tenantId_createdAt_idx\" ON public.\"Order\" USING btree (\"tenantId\", \"createdAt\")"
+    },
+    {
+      "table": "Order",
+      "index": "Order_tenantId_customerId_idx",
+      "bytes": "16384000",
+      "size": "16 MB",
+      "scans": "0",
+      "definition": "CREATE INDEX \"Order_tenantId_customerId_idx\" ON public.\"Order\" USING btree (\"tenantId\", \"customerId\")"
+    },
+    {
+      "table": "Order",
+      "index": "Order_tenantId_qrCodeId_createdAt_idx",
+      "bytes": "55853056",
+      "size": "53 MB",
+      "scans": "580",
+      "definition": "CREATE INDEX \"Order_tenantId_qrCodeId_createdAt_idx\" ON public.\"Order\" USING btree (\"tenantId\", \"qrCodeId\", \"createdAt\")"
+    },
+    {
+      "table": "Order",
+      "index": "Order_tenantId_recipientPhone_idx",
+      "bytes": "25649152",
+      "size": "24 MB",
+      "scans": "58",
+      "definition": "CREATE INDEX \"Order_tenantId_recipientPhone_idx\" ON public.\"Order\" USING btree (\"tenantId\", \"recipientPhone\")"
+    },
+    {
+      "table": "Order",
+      "index": "Order_tenantId_riderId_createdAt_idx",
+      "bytes": "59031552",
+      "size": "56 MB",
+      "scans": "58",
+      "definition": "CREATE INDEX \"Order_tenantId_riderId_createdAt_idx\" ON public.\"Order\" USING btree (\"tenantId\", \"riderId\", \"createdAt\")"
+    },
+    {
+      "table": "Order",
+      "index": "Order_tenantId_status_createdAt_idx",
+      "bytes": "66297856",
+      "size": "63 MB",
+      "scans": "232",
+      "definition": "CREATE INDEX \"Order_tenantId_status_createdAt_idx\" ON public.\"Order\" USING btree (\"tenantId\", status, \"createdAt\")"
+    },
+    {
+      "table": "Order",
+      "index": "Order_trackingCode_key",
+      "bytes": "80740352",
+      "size": "77 MB",
+      "scans": "58",
+      "definition": "CREATE UNIQUE INDEX \"Order_trackingCode_key\" ON public.\"Order\" USING btree (\"trackingCode\")"
+    },
+    {
+      "table": "OrderEvent",
+      "index": "OrderEvent_orderId_status_createdAt_idx",
+      "bytes": "238305280",
+      "size": "227 MB",
+      "scans": "1897238",
+      "definition": "CREATE INDEX \"OrderEvent_orderId_status_createdAt_idx\" ON public.\"OrderEvent\" USING btree (\"orderId\", status, \"createdAt\")"
+    },
+    {
+      "table": "OrderEvent",
+      "index": "OrderEvent_pkey",
+      "bytes": "194453504",
+      "size": "185 MB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"OrderEvent_pkey\" ON public.\"OrderEvent\" USING btree (id)"
+    },
+    {
+      "table": "Payment",
+      "index": "Payment_orderId_idx",
+      "bytes": "40624128",
+      "size": "39 MB",
+      "scans": "15486",
+      "definition": "CREATE INDEX \"Payment_orderId_idx\" ON public.\"Payment\" USING btree (\"orderId\")"
+    },
+    {
+      "table": "Payment",
+      "index": "Payment_pkey",
+      "bytes": "40296448",
+      "size": "38 MB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"Payment_pkey\" ON public.\"Payment\" USING btree (id)"
+    },
+    {
+      "table": "Payment",
+      "index": "Payment_providerReference_key",
+      "bytes": "78979072",
+      "size": "75 MB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"Payment_providerReference_key\" ON public.\"Payment\" USING btree (\"providerReference\")"
+    },
+    {
+      "table": "QrCode",
+      "index": "QrCode_code_key",
+      "bytes": "90112",
+      "size": "88 kB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"QrCode_code_key\" ON public.\"QrCode\" USING btree (code)"
+    },
+    {
+      "table": "QrCode",
+      "index": "QrCode_pkey",
+      "bytes": "57344",
+      "size": "56 kB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"QrCode_pkey\" ON public.\"QrCode\" USING btree (id)"
+    },
+    {
+      "table": "QrCode",
+      "index": "QrCode_tenantId_id_key",
+      "bytes": "90112",
+      "size": "88 kB",
+      "scans": "50058",
+      "definition": "CREATE UNIQUE INDEX \"QrCode_tenantId_id_key\" ON public.\"QrCode\" USING btree (\"tenantId\", id)"
+    },
+    {
+      "table": "QrScan",
+      "index": "QrScan_pkey",
+      "bytes": "100835328",
+      "size": "96 MB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"QrScan_pkey\" ON public.\"QrScan\" USING btree (id)"
+    },
+    {
+      "table": "QrScan",
+      "index": "QrScan_qrCodeId_scannedAt_idx",
+      "bytes": "134356992",
+      "size": "128 MB",
+      "scans": "580",
+      "definition": "CREATE INDEX \"QrScan_qrCodeId_scannedAt_idx\" ON public.\"QrScan\" USING btree (\"qrCodeId\", \"scannedAt\")"
+    },
+    {
+      "table": "Rider",
+      "index": "Rider_pkey",
+      "bytes": "90112",
+      "size": "88 kB",
+      "scans": "116",
+      "definition": "CREATE UNIQUE INDEX \"Rider_pkey\" ON public.\"Rider\" USING btree (id)"
+    },
+    {
+      "table": "Rider",
+      "index": "Rider_tenantId_id_key",
+      "bytes": "163840",
+      "size": "160 kB",
+      "scans": "174",
+      "definition": "CREATE UNIQUE INDEX \"Rider_tenantId_id_key\" ON public.\"Rider\" USING btree (\"tenantId\", id)"
+    },
+    {
+      "table": "Rider",
+      "index": "Rider_tenantId_userId_key",
+      "bytes": "163840",
+      "size": "160 kB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"Rider_tenantId_userId_key\" ON public.\"Rider\" USING btree (\"tenantId\", \"userId\")"
+    },
+    {
+      "table": "Rider",
+      "index": "Rider_userId_key",
+      "bytes": "90112",
+      "size": "88 kB",
+      "scans": "116",
+      "definition": "CREATE UNIQUE INDEX \"Rider_userId_key\" ON public.\"Rider\" USING btree (\"userId\")"
+    },
+    {
+      "table": "Tenant",
+      "index": "Tenant_pkey",
+      "bytes": "16384",
+      "size": "16 kB",
+      "scans": "116",
+      "definition": "CREATE UNIQUE INDEX \"Tenant_pkey\" ON public.\"Tenant\" USING btree (id)"
+    },
+    {
+      "table": "Tenant",
+      "index": "Tenant_subdomain_key",
+      "bytes": "16384",
+      "size": "16 kB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"Tenant_subdomain_key\" ON public.\"Tenant\" USING btree (subdomain)"
+    },
+    {
+      "table": "TrackingPoint",
+      "index": "TrackingPoint_orderId_recordedAt_idx",
+      "bytes": "188579840",
+      "size": "180 MB",
+      "scans": "2552",
+      "definition": "CREATE INDEX \"TrackingPoint_orderId_recordedAt_idx\" ON public.\"TrackingPoint\" USING btree (\"orderId\", \"recordedAt\")"
+    },
+    {
+      "table": "TrackingPoint",
+      "index": "TrackingPoint_pkey",
+      "bytes": "152002560",
+      "size": "145 MB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"TrackingPoint_pkey\" ON public.\"TrackingPoint\" USING btree (id)"
+    },
+    {
+      "table": "User",
+      "index": "User_pkey",
+      "bytes": "90112",
+      "size": "88 kB",
+      "scans": "116",
+      "definition": "CREATE UNIQUE INDEX \"User_pkey\" ON public.\"User\" USING btree (id)"
+    },
+    {
+      "table": "User",
+      "index": "User_tenantId_email_key",
+      "bytes": "172032",
+      "size": "168 kB",
+      "scans": "0",
+      "definition": "CREATE UNIQUE INDEX \"User_tenantId_email_key\" ON public.\"User\" USING btree (\"tenantId\", email)"
+    },
+    {
+      "table": "User",
+      "index": "User_tenantId_id_key",
+      "bytes": "172032",
+      "size": "168 kB",
+      "scans": "174",
+      "definition": "CREATE UNIQUE INDEX \"User_tenantId_id_key\" ON public.\"User\" USING btree (\"tenantId\", id)"
+    }
+  ],
+  "tables": [
+    {
+      "table": "Rider",
+      "rows": "0",
+      "heap": "200 kB",
+      "indexes": "496 kB",
+      "index_bytes": "507904"
+    },
+    {
+      "table": "Tenant",
+      "rows": "0",
+      "heap": "56 kB",
+      "indexes": "32 kB",
+      "index_bytes": "32768"
+    },
+    {
+      "table": "QrScan",
+      "rows": "0",
+      "heap": "163 MB",
+      "indexes": "224 MB",
+      "index_bytes": "235192320"
+    },
+    {
+      "table": "Payment",
+      "rows": "0",
+      "heap": "124 MB",
+      "indexes": "152 MB",
+      "index_bytes": "159899648"
+    },
+    {
+      "table": "QrCode",
+      "rows": "0",
+      "heap": "152 kB",
+      "indexes": "232 kB",
+      "index_bytes": "237568"
+    },
+    {
+      "table": "OrderEvent",
+      "rows": "0",
+      "heap": "352 MB",
+      "indexes": "413 MB",
+      "index_bytes": "432758784"
+    },
+    {
+      "table": "User",
+      "rows": "0",
+      "heap": "360 kB",
+      "indexes": "424 kB",
+      "index_bytes": "434176"
+    },
+    {
+      "table": "Order",
+      "rows": "0",
+      "heap": "297 MB",
+      "indexes": "377 MB",
+      "index_bytes": "394993664"
+    },
+    {
+      "table": "Bike",
+      "rows": "0",
+      "heap": "184 kB",
+      "indexes": "408 kB",
+      "index_bytes": "417792"
+    },
+    {
+      "table": "Customer",
+      "rows": "0",
+      "heap": "10 MB",
+      "indexes": "18 MB",
+      "index_bytes": "19357696"
+    },
+    {
+      "table": "TrackingPoint",
+      "rows": "0",
+      "heap": "327 MB",
+      "indexes": "325 MB",
+      "index_bytes": "340582400"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+-- Q11: QR analytics, last 30 days: scans, orders and conversion per QR code (US-05)
+-- Endpoint: GET /qr-codes/analytics?range=30d
+-- Label: baseline
+
+-- Counts are aggregated in separate LATERAL subqueries: joining scans and orders
+-- directly would multiply rows (scans x orders) and inflate both counts.
+SELECT q.label, q.campaign,
+       s.scans, oc.orders,
+       round(100.0 * oc.orders / nullif(s.scans, 0), 1) AS conversion_pct
+FROM "QrCode" q
+CROSS JOIN LATERAL (
+  SELECT count(*) AS scans FROM "QrScan" s
+  WHERE s."qrCodeId" = q.id AND s."scannedAt" >= now() - interval '30 days'
+) s
+CROSS JOIN LATERAL (
+  SELECT count(*) AS orders FROM "Order" o
+  WHERE o."tenantId" = q."tenantId" AND o."qrCodeId" = q.id AND o."createdAt" >= now() - interval '30 days'
+) oc
+WHERE q."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+ORDER BY oc.orders DESC;
+
+Sort  (cost=435.47..435.49 rows=10 width=63) (actual time=831.111..831.113 rows=10.00 loops=1)
+  Sort Key: (count(*)) DESC
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=31926 read=78104
+  ->  Nested Loop  (cost=45.99..435.30 rows=10 width=63) (actual time=92.571..831.076 rows=10.00 loops=1)
+        Buffers: shared hit=31926 read=78104
+        ->  Nested Loop  (cost=17.45..149.46 rows=10 width=55) (actual time=1.273..9.467 rows=10.00 loops=1)
+              Buffers: shared hit=10 read=334
+              ->  Bitmap Heap Scan on "QrCode" q  (cost=4.35..18.34 rows=10 width=47) (actual time=0.183..0.234 rows=10.00 loops=1)
+                    Recheck Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                    Heap Blocks: exact=10
+                    Buffers: shared read=12
+                    ->  Bitmap Index Scan on "QrCode_tenantId_id_key"  (cost=0.00..4.35 rows=10 width=0) (actual time=0.037..0.037 rows=10.00 loops=1)
+                          Index Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                          Index Searches: 1
+                          Buffers: shared read=2
+              ->  Aggregate  (cost=13.09..13.10 rows=1 width=8) (actual time=0.920..0.920 rows=1.00 loops=10)
+                    Buffers: shared hit=10 read=322
+                    ->  Index Only Scan using "QrScan_qrCodeId_scannedAt_idx" on "QrScan" s  (cost=0.43..12.58 rows=207 width=0) (actual time=0.045..0.746 rows=4432.90 loops=10)
+                          Index Cond: (("qrCodeId" = q.id) AND ("scannedAt" >= (now() - '30 days'::interval)))
+                          Heap Fetches: 0
+                          Index Searches: 10
+                          Buffers: shared hit=10 read=322
+        ->  Aggregate  (cost=28.55..28.56 rows=1 width=8) (actual time=82.154..82.154 rows=1.00 loops=10)
+              Buffers: shared hit=31916 read=77770
+              ->  Index Scan using "Order_tenantId_qrCodeId_idx" on "Order" o  (cost=0.42..28.55 rows=1 width=0) (actual time=0.065..82.022 rows=1064.20 loops=10)
+                    Index Cond: (("tenantId" = q."tenantId") AND ("qrCodeId" = q.id))
+                    Filter: ("createdAt" >= (now() - '30 days'::interval))
+                    Rows Removed by Filter: 11842
+                    Index Searches: 10
+                    Buffers: shared hit=31916 read=77770
+Planning Time: 0.271 ms
+Execution Time: 831.168 ms

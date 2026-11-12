@@ -1,0 +1,27 @@
+-- Q07: Fleet map: all active orders for the tenant (US-16)
+-- Endpoint: GET /dispatch/active-orders
+-- Label: optimised
+
+SELECT o.id, o.status, o."riderId", o."pickupAddress", o."deliveryAddress", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+  AND o.status IN ('PENDING', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT')
+ORDER BY o."createdAt" DESC
+LIMIT 200;
+
+Limit  (cost=331.24..331.44 rows=80 width=114) (actual time=0.088..0.094 rows=65.00 loops=1)
+  Buffers: shared hit=69
+  ->  Sort  (cost=331.24..331.44 rows=80 width=114) (actual time=0.088..0.090 rows=65.00 loops=1)
+        Sort Key: "createdAt" DESC
+        Sort Method: quicksort  Memory: 37kB
+        Buffers: shared hit=69
+        ->  Bitmap Heap Scan on "Order" o  (cost=18.52..328.71 rows=80 width=114) (actual time=0.028..0.065 rows=65.00 loops=1)
+              Recheck Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = ANY ('{PENDING,ASSIGNED,PICKED_UP,IN_TRANSIT}'::"OrderStatus"[])))
+              Heap Blocks: exact=65
+              Buffers: shared hit=69
+              ->  Bitmap Index Scan on "Order_tenantId_status_createdAt_idx"  (cost=0.00..18.50 rows=80 width=0) (actual time=0.013..0.013 rows=65.00 loops=1)
+                    Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = ANY ('{PENDING,ASSIGNED,PICKED_UP,IN_TRANSIT}'::"OrderStatus"[])))
+                    Index Searches: 1
+                    Buffers: shared hit=4
+Planning Time: 0.117 ms
+Execution Time: 0.109 ms

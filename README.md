@@ -45,5 +45,7 @@ Build with `npm run build`, then `npm start`. Generate Prisma Client before buil
 - `repositories/`: database access; the order example always filters by tenant.
 - `app.ts`: Express startup, health/readiness and graceful shutdown.
 - `docs/DATABASE.md`: ER diagram, relational schema, normalisation and diagram tooling.
+- `docs/PERFORMANCE.md`: API SQL queries, results, execution plans, indexing evidence and performance analysis at 1M orders.
+- `sql/perf/`, `scripts/perf/`: synthetic dataset, query catalogue and benchmark runner (`npm run perf:seed`, `perf:bench`, `perf:compare`). Development databases only.
 
 The CLI configuration reads DATABASE_URL independently of runtime config. Application code reads environment variables only in config. Follow routes → validation/middleware → controllers → services → repositories when adding business endpoints. Hash passwords explicitly before creating users: Prisma does not run Mongoose pre-save hooks.

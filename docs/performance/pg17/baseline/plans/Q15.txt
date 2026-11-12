@@ -1,0 +1,27 @@
+-- Q15: Fleet map: latest GPS position of every order on the road (US-16)
+-- Endpoint: GET /dispatch/live-positions
+-- Label: baseline
+
+SELECT o.id, o."riderId", o.status, lp.latitude, lp.longitude, lp."recordedAt"
+FROM "Order" o
+CROSS JOIN LATERAL (
+  SELECT tp.latitude, tp.longitude, tp."recordedAt"
+  FROM "TrackingPoint" tp
+  WHERE tp."orderId" = o.id
+  ORDER BY tp."recordedAt" DESC
+  LIMIT 1
+) lp
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af' AND o.status IN ('PICKED_UP', 'IN_TRANSIT');
+
+Nested Loop  (cost=0.85..144.65 rows=48 width=60) (actual time=0.073..0.307 rows=33 loops=1)
+  Buffers: shared hit=208
+  ->  Index Scan using "Order_tenantId_status_createdAt_idx" on "Order" o  (cost=0.42..56.69 rows=48 width=36) (actual time=0.018..0.056 rows=43 loops=1)
+        Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = ANY ('{PICKED_UP,IN_TRANSIT}'::"OrderStatus"[])))
+        Buffers: shared hit=46
+  ->  Limit  (cost=0.43..1.82 rows=1 width=24) (actual time=0.005..0.005 rows=1 loops=43)
+        Buffers: shared hit=162
+        ->  Index Scan Backward using "TrackingPoint_orderId_recordedAt_idx" on "TrackingPoint" tp  (cost=0.43..6.00 rows=4 width=24) (actual time=0.005..0.005 rows=1 loops=43)
+              Index Cond: ("orderId" = o.id)
+              Buffers: shared hit=162
+Planning Time: 0.227 ms
+Execution Time: 0.332 ms

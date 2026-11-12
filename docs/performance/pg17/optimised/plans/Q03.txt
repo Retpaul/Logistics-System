@@ -1,0 +1,17 @@
+-- Q03: Orders page, default view: newest 25 orders for the tenant (US-17)
+-- Endpoint: GET /orders?limit=25
+-- Label: optimised
+
+SELECT o.id, o."trackingCode", o.status, o."recipientName", o."deliveryAddress", o."deliveryFee", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+ORDER BY o."createdAt" DESC
+LIMIT 25;
+
+Limit  (cost=0.42..5.65 rows=25 width=119) (actual time=0.008..0.019 rows=25 loops=1)
+  Buffers: shared hit=28
+  ->  Index Scan Backward using "Order_tenantId_createdAt_idx" on "Order" o  (cost=0.42..45237.44 rows=216275 width=119) (actual time=0.007..0.017 rows=25 loops=1)
+        Index Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+        Buffers: shared hit=28
+Planning Time: 0.083 ms
+Execution Time: 0.027 ms

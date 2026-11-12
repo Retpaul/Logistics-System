@@ -1,0 +1,100 @@
+-- Q10: Rider leaderboard, last 30 days: deliveries and average pickup-to-drop minutes (US-18)
+-- Endpoint: GET /analytics/riders
+-- Label: optimised
+
+SELECT u."firstName" || ' ' || u."lastName" AS rider,
+       count(*) AS deliveries,
+       round(avg(extract(epoch FROM d."createdAt" - pu."createdAt")) / 60, 1) AS avg_minutes
+FROM "Order" o
+JOIN "Rider" r ON r."tenantId" = o."tenantId" AND r.id = o."riderId"
+JOIN "User" u ON u."tenantId" = r."tenantId" AND u.id = r."userId"
+JOIN "OrderEvent" pu ON pu."orderId" = o.id AND pu.status = 'PICKED_UP'
+JOIN "OrderEvent" d ON d."orderId" = o.id AND d.status = 'DELIVERED'
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+  AND o.status = 'DELIVERED'
+  AND o."createdAt" >= now() - interval '30 days'
+GROUP BY u.id, u."firstName", u."lastName"
+ORDER BY deliveries DESC
+LIMIT 10;
+
+Limit  (cost=61912.71..61912.74 rows=10 width=98) (actual time=339.798..346.988 rows=10.00 loops=1)
+  Buffers: shared hit=118700 read=25832
+  ->  Sort  (cost=61912.71..61912.77 rows=22 width=98) (actual time=339.796..346.984 rows=10.00 loops=1)
+        Sort Key: (count(*)) DESC
+        Sort Method: quicksort  Memory: 27kB
+        Buffers: shared hit=118700 read=25832
+        ->  Finalize GroupAggregate  (cost=61803.22..61912.23 rows=22 width=98) (actual time=333.627..346.962 rows=20.00 loops=1)
+              Group Key: u.id
+              Buffers: shared hit=118700 read=25832
+              ->  Gather Merge  (cost=61803.22..61911.21 rows=53 width=66) (actual time=333.043..346.873 rows=60.00 loops=1)
+                    Workers Planned: 2
+                    Workers Launched: 2
+                    Buffers: shared hit=118700 read=25832
+                    ->  Partial GroupAggregate  (cost=60803.20..60905.07 rows=22 width=66) (actual time=248.721..253.549 rows=20.00 loops=3)
+                          Group Key: u.id
+                          Buffers: shared hit=118700 read=25832
+                          ->  Merge Join  (cost=60803.20..60832.72 rows=5766 width=42) (actual time=248.546..250.919 rows=5450.33 loops=3)
+                                Merge Cond: (r."userId" = u.id)
+                                Buffers: shared hit=118700 read=25832
+                                ->  Sort  (cost=60762.21..60776.62 rows=5766 width=48) (actual time=247.197..247.820 rows=5450.33 loops=3)
+                                      Sort Key: r."userId"
+                                      Sort Method: quicksort  Memory: 900kB
+                                      Buffers: shared hit=118627 read=25831
+                                      Worker 0:  Sort Method: quicksort  Memory: 515kB
+                                      Worker 1:  Sort Method: quicksort  Memory: 281kB
+                                      ->  Hash Join  (cost=775.40..60402.02 rows=5766 width=48) (actual time=6.715..242.181 rows=5450.33 loops=3)
+                                            Hash Cond: (o."riderId" = r.id)
+                                            Buffers: shared hit=118619 read=25831
+                                            ->  Nested Loop  (cost=748.76..60360.21 rows=5766 width=48) (actual time=5.016..235.223 rows=5450.33 loops=3)
+                                                  Buffers: shared hit=118537 read=25805
+                                                  ->  Nested Loop  (cost=748.20..55889.93 rows=6242 width=72) (actual time=4.981..203.412 rows=5450.33 loops=3)
+                                                        Buffers: shared hit=53244 read=25654
+                                                        ->  Parallel Bitmap Heap Scan on "Order" o  (cost=747.65..30344.90 rows=6902 width=48) (actual time=4.293..46.592 rows=5450.33 loops=3)
+                                                              Recheck Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = 'DELIVERED'::"OrderStatus") AND ("createdAt" >= (now() - '30 days'::interval)))
+                                                              Heap Blocks: exact=6736
+                                                              Buffers: shared read=13452
+                                                              Worker 0:  Heap Blocks: exact=4164
+                                                              Worker 1:  Heap Blocks: exact=2419
+                                                              ->  Bitmap Index Scan on "Order_tenantId_status_createdAt_idx"  (cost=0.00..743.50 rows=16566 width=0) (actual time=6.451..6.452 rows=16351.00 loops=1)
+                                                                    Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = 'DELIVERED'::"OrderStatus") AND ("createdAt" >= (now() - '30 days'::interval)))
+                                                                    Index Searches: 1
+                                                                    Buffers: shared read=133
+                                                        ->  Index Only Scan using "OrderEvent_orderId_status_createdAt_idx" on "OrderEvent" pu  (cost=0.56..3.69 rows=1 width=24) (actual time=0.027..0.027 rows=1.00 loops=16351)
+                                                              Index Cond: (("orderId" = o.id) AND (status = 'PICKED_UP'::"OrderStatus"))
+                                                              Heap Fetches: 0
+                                                              Index Searches: 16351
+                                                              Buffers: shared hit=53244 read=12202
+                                                  ->  Index Only Scan using "OrderEvent_orderId_status_createdAt_idx" on "OrderEvent" d  (cost=0.56..0.71 rows=1 width=24) (actual time=0.005..0.005 rows=1.00 loops=16351)
+                                                        Index Cond: (("orderId" = pu."orderId") AND (status = 'DELIVERED'::"OrderStatus"))
+                                                        Heap Fetches: 0
+                                                        Index Searches: 16351
+                                                        Buffers: shared hit=65293 read=151
+                                            ->  Hash  (cost=26.39..26.39 rows=20 width=48) (actual time=1.683..1.684 rows=20.00 loops=3)
+                                                  Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                                                  Buffers: shared hit=82 read=26
+                                                  ->  Bitmap Heap Scan on "Rider" r  (cost=4.43..26.39 rows=20 width=48) (actual time=1.452..1.658 rows=20.00 loops=3)
+                                                        Recheck Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                                                        Heap Blocks: exact=20
+                                                        Buffers: shared hit=82 read=26
+                                                        ->  Bitmap Index Scan on "Rider_tenantId_id_key"  (cost=0.00..4.43 rows=20 width=0) (actual time=0.310..0.310 rows=20.00 loops=3)
+                                                              Index Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                                                              Index Searches: 3
+                                                              Buffers: shared hit=5 read=3
+                                ->  Sort  (cost=40.99..41.05 rows=22 width=42) (actual time=1.344..1.348 rows=21.00 loops=3)
+                                      Sort Key: u.id
+                                      Sort Method: quicksort  Memory: 26kB
+                                      Buffers: shared hit=73 read=1
+                                      Worker 0:  Sort Method: quicksort  Memory: 26kB
+                                      Worker 1:  Sort Method: quicksort  Memory: 26kB
+                                      ->  Bitmap Heap Scan on "User" u  (cost=4.45..40.50 rows=22 width=42) (actual time=1.267..1.325 rows=22.00 loops=3)
+                                            Recheck Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                                            Heap Blocks: exact=22
+                                            Buffers: shared hit=73 read=1
+                                            ->  Bitmap Index Scan on "User_tenantId_id_key"  (cost=0.00..4.45 rows=22 width=0) (actual time=0.653..0.654 rows=22.00 loops=3)
+                                                  Index Cond: ("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid)
+                                                  Index Searches: 3
+                                                  Buffers: shared hit=7 read=1
+Planning:
+  Buffers: shared hit=58 read=16
+Planning Time: 3.439 ms
+Execution Time: 347.424 ms

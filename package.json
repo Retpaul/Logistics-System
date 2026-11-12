@@ -13,7 +13,10 @@
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "perf:seed": "node scripts/perf/seed.mjs",
+    "perf:bench": "node scripts/perf/bench.mjs",
+    "perf:compare": "node scripts/perf/compare.mjs"
   },
   "keywords": [
     "bike",

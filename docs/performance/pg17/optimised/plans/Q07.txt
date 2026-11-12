@@ -1,0 +1,22 @@
+-- Q07: Fleet map: all active orders for the tenant (US-16)
+-- Endpoint: GET /dispatch/active-orders
+-- Label: optimised
+
+SELECT o.id, o.status, o."riderId", o."pickupAddress", o."deliveryAddress", o."createdAt"
+FROM "Order" o
+WHERE o."tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'
+  AND o.status IN ('PENDING', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT')
+ORDER BY o."createdAt" DESC
+LIMIT 200;
+
+Limit  (cost=63.44..63.56 rows=50 width=114) (actual time=0.058..0.063 rows=65 loops=1)
+  Buffers: shared hit=69
+  ->  Sort  (cost=63.44..63.56 rows=50 width=114) (actual time=0.058..0.060 rows=65 loops=1)
+        Sort Key: "createdAt" DESC
+        Sort Method: quicksort  Memory: 37kB
+        Buffers: shared hit=69
+        ->  Index Scan using "Order_tenantId_status_createdAt_idx" on "Order" o  (cost=0.42..62.03 rows=50 width=114) (actual time=0.007..0.040 rows=65 loops=1)
+              Index Cond: (("tenantId" = '76369a2d-016f-7bbd-d447-684b65cb44af'::uuid) AND (status = ANY ('{PENDING,ASSIGNED,PICKED_UP,IN_TRANSIT}'::"OrderStatus"[])))
+              Buffers: shared hit=69
+Planning Time: 0.096 ms
+Execution Time: 0.114 ms
