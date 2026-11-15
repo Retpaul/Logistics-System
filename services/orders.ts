@@ -4,33 +4,47 @@ import {
   CreateOrderRequest,
   Id,
   OrderListQuery,
+  OrderLocationsRequest,
   type OrderDetail,
   type OrderListResponse,
 } from "../contracts/index.js";
 import { AppError, notFound } from "../lib/errors.js";
-import { customersRepository, ordersRepository, tenantsRepository } from "../repositories/index.js";
+import {
+  customersRepository,
+  ordersRepository,
+  tenantsRepository,
+} from "../repositories/index.js";
 import { prisma } from "../startup/db.js";
 import { toOrderDetail, toOrderListItem } from "./mappers.js";
 import { assertTransition } from "./orderStatus.js";
 import { feeFor } from "./pricing.js";
+import { publish } from "../startup/realtime.js";
 
 const PHONE_LIKE = /^\+?[0-9][0-9 ()-]{5,}$/;
 
 const encodeCursor = (createdAt: Date, id: string) =>
-  Buffer.from(JSON.stringify([createdAt.toISOString(), id])).toString("base64url");
+  Buffer.from(JSON.stringify([createdAt.toISOString(), id])).toString(
+    "base64url",
+  );
 
 function decodeCursor(cursor: string): { createdAt: Date; id: string } {
   try {
-    const [iso, id] = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")) as [string, string];
+    const [iso, id] = JSON.parse(
+      Buffer.from(cursor, "base64url").toString("utf8"),
+    ) as [string, string];
     const createdAt = new Date(iso);
-    if (Number.isNaN(createdAt.getTime()) || !Id.safeParse(id).success) throw new Error("bad cursor");
+    if (Number.isNaN(createdAt.getTime()) || !Id.safeParse(id).success)
+      throw new Error("bad cursor");
     return { createdAt, id };
   } catch {
     throw new AppError(400, "VALIDATION_FAILED", "Invalid cursor");
   }
 }
 
-export async function listOrders(tenantId: string, rawQuery: unknown): Promise<OrderListResponse> {
+export async function listOrders(
+  tenantId: string,
+  rawQuery: unknown,
+): Promise<OrderListResponse> {
   const query = OrderListQuery.parse(rawQuery);
   const q = query.q;
   const rows = await ordersRepository.list(tenantId, {
@@ -38,8 +52,10 @@ export async function listOrders(tenantId: string, rawQuery: unknown): Promise<O
     riderId: query.riderId,
     from: query.from ? new Date(query.from) : undefined,
     to: query.to ? new Date(query.to) : undefined,
-    recipientPhone: q && PHONE_LIKE.test(q) ? q.replace(/[\s()-]/g, "") : undefined,
-    trackingCodePrefix: q && !PHONE_LIKE.test(q) ? q.toLowerCase().replace(/^#/, "") : undefined,
+    recipientPhone:
+      q && PHONE_LIKE.test(q) ? q.replace(/[\s()-]/g, "") : undefined,
+    trackingCodePrefix:
+      q && !PHONE_LIKE.test(q) ? q.toLowerCase().replace(/^#/, "") : undefined,
     after: query.cursor ? decodeCursor(query.cursor) : undefined,
     take: query.limit + 1,
   });
@@ -47,11 +63,17 @@ export async function listOrders(tenantId: string, rawQuery: unknown): Promise<O
   const last = page.at(-1);
   return {
     items: page.map(toOrderListItem),
-    nextCursor: rows.length > query.limit && last ? encodeCursor(last.createdAt, last.id) : null,
+    nextCursor:
+      rows.length > query.limit && last
+        ? encodeCursor(last.createdAt, last.id)
+        : null,
   };
 }
 
-export async function getOrder(tenantId: string, id: string): Promise<OrderDetail> {
+export async function getOrder(
+  tenantId: string,
+  id: string,
+): Promise<OrderDetail> {
   // A malformed id or another tenant's id both look like "not found": never reveal existence.
   if (!Id.safeParse(id).success) throw notFound("Order");
   const order = await ordersRepository.findById(tenantId, id);
@@ -63,6 +85,8 @@ type NewOrder = {
   customer: { name: string; phone: string; email?: string };
   pickupAddress: string;
   deliveryAddress: string;
+  pickupLocation: { latitude: number; longitude: number };
+  deliveryLocation: { latitude: number; longitude: number };
   recipientName: string;
   recipientPhone: string;
   packageSize: PackageSize;
@@ -79,8 +103,11 @@ export async function placeOrder(
     const tenant = await tenantsRepository.findById(tenantId, tx);
     if (!tenant) throw notFound("Organisation");
     const customer =
-      (await customersRepository.findByPhone(tenantId, order.customer.phone, tx)) ??
-      (await customersRepository.create(tenantId, order.customer, tx));
+      (await customersRepository.findByPhone(
+        tenantId,
+        order.customer.phone,
+        tx,
+      )) ?? (await customersRepository.create(tenantId, order.customer, tx));
 
     return ordersRepository.create(
       tenantId,
@@ -89,6 +116,10 @@ export async function placeOrder(
         qrCodeId: source.qrCodeId,
         pickupAddress: order.pickupAddress,
         deliveryAddress: order.deliveryAddress,
+        pickupLatitude: order.pickupLocation.latitude,
+        pickupLongitude: order.pickupLocation.longitude,
+        deliveryLatitude: order.deliveryLocation.latitude,
+        deliveryLongitude: order.deliveryLocation.longitude,
         recipientName: order.recipientName,
         recipientPhone: order.recipientPhone,
         packageSize: order.packageSize,
@@ -100,14 +131,24 @@ export async function placeOrder(
       tx,
     );
   });
+  publish(tenantId, created.trackingCode);
   return toOrderDetail(created);
 }
 
-export async function createOrder(tenantId: string, input: unknown): Promise<OrderDetail> {
-  return placeOrder(tenantId, CreateOrderRequest.parse(input), { note: "Created by dispatcher" });
+export async function createOrder(
+  tenantId: string,
+  input: unknown,
+): Promise<OrderDetail> {
+  return placeOrder(tenantId, CreateOrderRequest.parse(input), {
+    note: "Created by dispatcher",
+  });
 }
 
-export async function cancelOrder(tenantId: string, id: string, input: unknown): Promise<OrderDetail> {
+export async function cancelOrder(
+  tenantId: string,
+  id: string,
+  input: unknown,
+): Promise<OrderDetail> {
   const { reason } = CancelOrderRequest.parse(input ?? {});
   if (!Id.safeParse(id).success) throw notFound("Order");
   const current = await ordersRepository.findStatus(tenantId, id);
@@ -115,8 +156,54 @@ export async function cancelOrder(tenantId: string, id: string, input: unknown):
   assertTransition(current.status, "CANCELLED", "STAFF");
 
   const changed = await prisma.$transaction((tx) =>
-    ordersRepository.transition(tenantId, id, current.status, "CANCELLED", reason || "Cancelled by dispatcher", tx),
+    ordersRepository.transition(
+      tenantId,
+      id,
+      current.status,
+      "CANCELLED",
+      reason || "Cancelled by dispatcher",
+      tx,
+    ),
   );
-  if (!changed) throw new AppError(409, "CONFLICT", "The order was updated by someone else. Reload and try again.");
-  return getOrder(tenantId, id);
+  if (!changed)
+    throw new AppError(
+      409,
+      "CONFLICT",
+      "The order was updated by someone else. Reload and try again.",
+    );
+  const order = await getOrder(tenantId, id);
+  publish(tenantId, order.trackingCode);
+  return order;
+}
+
+// Existing orders can receive staff-confirmed coordinates without replacing their addresses/history.
+export async function updateOrderLocations(
+  tenantId: string,
+  id: string,
+  raw: unknown,
+) {
+  const { pickupLocation: p, deliveryLocation: d } =
+    OrderLocationsRequest.parse(raw);
+  const order = await prisma.$transaction(async (tx) => {
+    const changed = await tx.order.updateMany({
+      where: {
+        id,
+        tenantId: tenantId,
+        status: { notIn: ["DELIVERED", "CANCELLED"] },
+      },
+      data: {
+        pickupLatitude: p.latitude,
+        pickupLongitude: p.longitude,
+        deliveryLatitude: d.latitude,
+        deliveryLongitude: d.longitude,
+      },
+    });
+    if (!changed.count) throw notFound("Active order");
+    return tx.order.findUniqueOrThrow({
+      where: { id },
+      select: { trackingCode: true },
+    });
+  });
+  publish(tenantId, order.trackingCode);
+  return { message: "Location points saved" };
 }

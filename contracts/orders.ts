@@ -1,6 +1,6 @@
 // Shared API contract: orders (dispatch console).
 import { z } from "zod";
-import { Email, Id, Money, Phone, Timestamp } from "./common.js";
+import { Email, Id, Money, Phone, Timestamp, GeoPoint } from "./common.js";
 import { OrderStatus, PackageSize } from "./enums.js";
 
 /** GET /orders query string. Results are newest first; follow `nextCursor` for the next page. */
@@ -27,6 +27,8 @@ export const OrderListItem = z.object({
   packageSize: PackageSize,
   pickupAddress: z.string(),
   deliveryAddress: z.string(),
+  pickupLocation: GeoPoint.nullable(),
+  deliveryLocation: GeoPoint.nullable(),
   recipientName: z.string(),
   recipientPhone: z.string(),
   deliveryFee: Money,
@@ -54,7 +56,12 @@ export type OrderEvent = z.infer<typeof OrderEvent>;
 export const OrderDetail = OrderListItem.extend({
   notes: z.string().nullable(),
   updatedAt: Timestamp,
-  customer: OrderParty.extend({ phone: z.string(), email: z.string().nullable() }),
+  proofFileId: Id.nullable().optional(),
+  proofRecipient: z.string().nullable().optional(),
+  customer: OrderParty.extend({
+    phone: z.string(),
+    email: z.string().nullable(),
+  }),
   qrCode: z.object({ id: Id, label: z.string() }).nullable(),
   events: z.array(OrderEvent),
 });
@@ -72,6 +79,8 @@ export const CreateOrderRequest = z.object({
   }),
   pickupAddress: Address,
   deliveryAddress: Address,
+  pickupLocation: GeoPoint,
+  deliveryLocation: GeoPoint,
   recipientName: PersonName,
   recipientPhone: Phone,
   packageSize: PackageSize,

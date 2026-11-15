@@ -5,6 +5,7 @@ import { config } from "./config/index.js";
 import { checkDatabase } from "./startup/db.js";
 import { errorHandler, notFoundHandler } from "./middleware/errors.js";
 import { authRouter, ordersRouter, publicRouter, tenantRouter } from "./routes/index.js";
+import { dispatchRouter, invitationRouter } from "./routes/dispatch.js";
 
 /** Builds the Express app without listening, so tests can drive it with supertest. */
 export function createApp() {
@@ -33,6 +34,8 @@ export function createApp() {
   app.use(`${api}/tenant`, tenantRouter);
   app.use(`${api}/orders`, ordersRouter);
   app.use(`${api}/public`, publicRouter);
+  app.use(`${api}/dispatch`, dispatchRouter);
+  app.use(`${api}/invitations`, invitationRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

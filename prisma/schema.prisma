@@ -66,6 +66,7 @@ model User {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   rider Rider?
   refreshTokens RefreshToken[]
+  files StoredFile[]
   @@unique([tenantId, email])
   @@unique([tenantId, id])
   @@index([email])                             // login looks a user up by email across tenants
@@ -92,6 +93,15 @@ model Rider {
   tenantId String @db.Uuid
   userId String @unique @db.Uuid
   available Boolean @default(false)
+  onboardingStatus String @default("PENDING") @db.VarChar(20)
+  phone String? @db.VarChar(25)
+  invitationHash String? @unique @db.Char(64)
+  invitationExpiresAt DateTime? @db.Timestamptz(3)
+  latitude Decimal? @db.Decimal(9, 6)
+  longitude Decimal? @db.Decimal(9, 6)
+  locationAt DateTime? @db.Timestamptz(3)
+  locationSource String? @db.VarChar(10)
+  bikeSerial String? @db.VarChar(100)
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   user User @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Restrict)
   orders Order[]
@@ -162,6 +172,14 @@ model Order {
   currency String @default("NGN") @db.VarChar(3)
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  pickedUpAt DateTime? @db.Timestamptz(3)
+  deliveredAt DateTime? @db.Timestamptz(3)
+  proofFileId String? @db.Uuid
+  proofRecipient String? @db.VarChar(150)
+  pickupLatitude Decimal? @db.Decimal(9, 6)
+  pickupLongitude Decimal? @db.Decimal(9, 6)
+  deliveryLatitude Decimal? @db.Decimal(9, 6)
+  deliveryLongitude Decimal? @db.Decimal(9, 6)
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   customer Customer @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Restrict)
   rider Rider? @relation(fields: [tenantId, riderId], references: [tenantId, id], onDelete: Restrict)
@@ -173,11 +191,27 @@ model Order {
   @@index([tenantId, status, createdAt])
   // Query-performance indexes: evidence in docs/PERFORMANCE.md.
   @@index([tenantId, createdAt])               // newest-first lists, date ranges, KPIs (Q03, Q04, Q08, Q09)
+  @@index([tenantId, deliveredAt])             // exact delivery-day totals
   @@index([tenantId, customerId])
   @@index([tenantId, riderId, createdAt])      // replaces (tenantId, riderId): rider filter ordered by date (Q06)
   @@index([tenantId, bikeId])
   @@index([tenantId, qrCodeId, createdAt])     // replaces (tenantId, qrCodeId): QR conversions by date (Q11)
   @@index([tenantId, recipientPhone])          // dispatcher phone search (Q13)
+}
+
+// Private file ownership is checked before signing; resource linking is controlled by services.
+model StoredFile {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  userId String @db.Uuid
+  key String @unique
+  filename String @db.VarChar(120)
+  contentType String @db.VarChar(127)
+  size Int
+  purpose String @db.VarChar(20)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user User @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Restrict)
+  @@index([tenantId, userId, purpose])
 }
 
 model OrderEvent {
@@ -196,6 +230,8 @@ model TrackingPoint {
   latitude Decimal @db.Decimal(9, 6)
   longitude Decimal @db.Decimal(9, 6)
   recordedAt DateTime @default(now()) @db.Timestamptz(3)
+  source String @default("LEGACY") @db.VarChar(10)
+  accuracy Float?
   order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
   @@index([orderId, recordedAt])
 }

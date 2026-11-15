@@ -20,10 +20,19 @@ export const HexColor = z
   .regex(/^#[0-9a-fA-F]{6}$/, "Use a colour like #10b981")
   .transform((value) => value.toLowerCase());
 
-export const CurrencyCode = z.string().trim().toUpperCase().pipe(z.string().regex(/^[A-Z]{3}$/, "Use a 3-letter currency code"));
+export const CurrencyCode = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .pipe(z.string().regex(/^[A-Z]{3}$/, "Use a 3-letter currency code"));
 
 /** Money travels as a decimal string ("2500.00") so no precision is lost. */
 export const Money = z.string();
 
 /** Timestamps travel as ISO-8601 strings. */
 export const Timestamp = z.iso.datetime({ offset: true });
+export const GeoPoint = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+export type GeoPoint = z.infer<typeof GeoPoint>;

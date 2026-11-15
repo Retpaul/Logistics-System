@@ -12,7 +12,12 @@ import { ordersRepository, qrCodesRepository } from "../repositories/index.js";
 import { placeOrder } from "./orders.js";
 import { priceTable } from "./pricing.js";
 
-const branding = (t: Pick<Tenant, "name" | "tagline" | "logoUrl" | "brandColor" | "secondaryColor">): PublicBranding => ({
+const branding = (
+  t: Pick<
+    Tenant,
+    "name" | "tagline" | "logoUrl" | "brandColor" | "secondaryColor"
+  >,
+): PublicBranding => ({
   name: t.name,
   tagline: t.tagline,
   logoUrl: t.logoUrl,
@@ -37,15 +42,24 @@ export async function getQrLanding(code: string): Promise<PublicQrResponse> {
   };
 }
 
-export async function bookViaQr(code: string, input: unknown): Promise<PublicBookingResponse> {
+export async function bookViaQr(
+  code: string,
+  input: unknown,
+): Promise<PublicBookingResponse> {
   const qr = await activeQr(code);
   const b = PublicBookingRequest.parse(input);
   const order = await placeOrder(
     qr.tenantId,
     {
-      customer: { name: b.customerName, phone: b.customerPhone, email: b.customerEmail },
+      customer: {
+        name: b.customerName,
+        phone: b.customerPhone,
+        email: b.customerEmail,
+      },
       pickupAddress: b.pickupAddress,
       deliveryAddress: b.deliveryAddress,
+      pickupLocation: b.pickupLocation,
+      deliveryLocation: b.deliveryLocation,
       recipientName: b.recipientName,
       recipientPhone: b.recipientPhone,
       packageSize: b.packageSize,
@@ -56,8 +70,13 @@ export async function bookViaQr(code: string, input: unknown): Promise<PublicBoo
   return { trackingCode: order.trackingCode };
 }
 
-export async function trackOrder(trackingCode: string): Promise<PublicTrackResponse> {
-  const o = trackingCode.length <= 64 ? await ordersRepository.findForTracking(trackingCode) : null;
+export async function trackOrder(
+  trackingCode: string,
+): Promise<PublicTrackResponse> {
+  const o =
+    trackingCode.length <= 64
+      ? await ordersRepository.findForTracking(trackingCode)
+      : null;
   if (!o) throw notFound("Order");
   const last = o.locations[0];
   return {
@@ -66,13 +85,41 @@ export async function trackOrder(trackingCode: string): Promise<PublicTrackRespo
     packageSize: o.packageSize,
     pickupAddress: o.pickupAddress,
     deliveryAddress: o.deliveryAddress,
+    pickupLocation:
+      o.pickupLatitude !== null && o.pickupLongitude !== null
+        ? {
+            latitude: Number(o.pickupLatitude),
+            longitude: Number(o.pickupLongitude),
+          }
+        : null,
+    deliveryLocation:
+      o.deliveryLatitude !== null && o.deliveryLongitude !== null
+        ? {
+            latitude: Number(o.deliveryLatitude),
+            longitude: Number(o.deliveryLongitude),
+          }
+        : null,
+    trail: [...o.locations]
+      .reverse()
+      .map((p) => ({
+        latitude: Number(p.latitude),
+        longitude: Number(p.longitude),
+        recordedAt: p.recordedAt.toISOString(),
+      })),
     createdAt: o.createdAt.toISOString(),
     updatedAt: o.updatedAt.toISOString(),
     tenant: branding(o.tenant),
     rider: o.rider ? { firstName: o.rider.user.firstName } : null,
-    events: o.events.map((e) => ({ status: e.status, createdAt: e.createdAt.toISOString() })),
+    events: o.events.map((e) => ({
+      status: e.status,
+      createdAt: e.createdAt.toISOString(),
+    })),
     lastLocation: last
-      ? { latitude: Number(last.latitude), longitude: Number(last.longitude), recordedAt: last.recordedAt.toISOString() }
+      ? {
+          latitude: Number(last.latitude),
+          longitude: Number(last.longitude),
+          recordedAt: last.recordedAt.toISOString(),
+        }
       : null,
   };
 }

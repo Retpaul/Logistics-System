@@ -1,7 +1,7 @@
 // Shared API contract: public endpoints (QR booking and tracking). No login; the tenant is
 // resolved from the QR code or the tracking code, never from the request body.
 import { z } from "zod";
-import { Email, Money, Phone, Timestamp } from "./common.js";
+import { Email, Money, Phone, Timestamp, GeoPoint } from "./common.js";
 import { OrderStatus, PackageSize } from "./enums.js";
 
 export const PublicBranding = z.object({
@@ -28,8 +28,18 @@ export const PublicBookingRequest = z.object({
   customerPhone: Phone,
   customerEmail: Email.optional(),
   pickupAddress: z.string().trim().min(3, "Enter the pickup address").max(500),
-  deliveryAddress: z.string().trim().min(3, "Enter the delivery address").max(500),
-  recipientName: z.string().trim().min(2, "Enter the recipient's name").max(150),
+  deliveryAddress: z
+    .string()
+    .trim()
+    .min(3, "Enter the delivery address")
+    .max(500),
+  pickupLocation: GeoPoint,
+  deliveryLocation: GeoPoint,
+  recipientName: z
+    .string()
+    .trim()
+    .min(2, "Enter the recipient's name")
+    .max(150),
   recipientPhone: Phone,
   packageSize: PackageSize,
   notes: z.string().trim().max(1000).optional(),
@@ -46,13 +56,20 @@ export const PublicTrackResponse = z.object({
   packageSize: PackageSize,
   pickupAddress: z.string(),
   deliveryAddress: z.string(),
+  pickupLocation: GeoPoint.nullable(),
+  deliveryLocation: GeoPoint.nullable(),
+  trail: z.array(GeoPoint.extend({ recordedAt: Timestamp })),
   createdAt: Timestamp,
   updatedAt: Timestamp,
   tenant: PublicBranding,
   rider: z.object({ firstName: z.string() }).nullable(),
   events: z.array(z.object({ status: OrderStatus, createdAt: Timestamp })),
   lastLocation: z
-    .object({ latitude: z.number(), longitude: z.number(), recordedAt: Timestamp })
+    .object({
+      latitude: z.number(),
+      longitude: z.number(),
+      recordedAt: Timestamp,
+    })
     .nullable(),
 });
 export type PublicTrackResponse = z.infer<typeof PublicTrackResponse>;

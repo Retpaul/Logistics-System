@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true },
+  "include": [
+    "models/**/*.ts",
+    "test/mongo-models.test.ts",
+    "scripts/document-mongo-models.ts",
+    "vitest.models.config.ts"
+  ]
+}

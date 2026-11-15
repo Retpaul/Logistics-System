@@ -1,4 +1,6 @@
 # Query performance: SQL, results, execution plans and indexing evidence
+**Phase 2 update:** these timings and the SQL catalogue describe the historical benchmark. The current analytics API (`/dispatch/analytics`) reads materialized `Order.pickedUpAt` / `deliveredAt` columns, added and backfilled by migration `20261112000300_phase_two`, instead of joining events for each leaderboard request. The committed benchmark queries/plans remain unchanged to preserve the original evidence. The 26 ms experiment below is historical evidence, not a fresh benchmark of the current API. See [PHASE_TWO.md](PHASE_TWO.md) for local rollout and recovery status.
+
 
 This document records how the Bike Dispatch API's main database queries perform at the PRD's target scale, what was changed to make them fast, and what that change costs. All numbers come from real runs. Raw evidence is committed alongside:
 
@@ -199,7 +201,7 @@ Q10 still does two lookups into a 4.8M-row table for each of the ~16k delivered 
 | As written, PG17 with 256 MB cache, `random_page_cost = 1.1` | 103 ms | 217 ms | ✓ |
 | Denormalised `pickedUpAt` / `deliveredAt` on `Order`, PG18 defaults³ | **19 ms** | **26 ms** | ✓ |
 
-³ Experiment on the perf database only: the two columns were added, backfilled from `OrderEvent`, measured against the same 50-run protocol (identical results to the original query, 17,435 pages, all cache hits), then dropped again. The schema and migrations in this repository do not include them.
+³ Experiment on the perf database only: the two columns were added, backfilled from `OrderEvent`, measured against the same 50-run protocol (identical results to the original query, 17,435 pages, all cache hits), then dropped again. At benchmark time the schema did not include them. The Phase 2 migration now does; see the update above.
 
 The single-probe rewrite merges the two lookups into one conditional aggregate and returns identical results with 38% fewer page touches (89,524). It helps when the index is cached (on PG17 it cut p95 from 217 ms to 122 ms), but on a cache-starved server it is still I/O-bound:
 

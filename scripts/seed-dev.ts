@@ -13,6 +13,7 @@ const reset = process.argv.includes("--reset");
 async function removeDemoTenant(tenantId: string) {
   const orders = { order: { tenantId } };
   await prisma.$transaction([
+    prisma.storedFile.deleteMany({ where: {tenantId} }),
     prisma.orderEvent.deleteMany({ where: orders }),
     prisma.trackingPoint.deleteMany({ where: orders }),
     prisma.payment.deleteMany({ where: orders }),
@@ -66,7 +67,7 @@ async function main() {
 
   for (let i = 0; i < 30; i++) {
     // Older orders are finished; the newest few are still in progress.
-    const status: OrderStatus = i < 4 ? flow[i % 4] : i % 9 === 0 ? "CANCELLED" : "DELIVERED";
+    const status: OrderStatus = i < 4 ? (i === 3 ? "IN_TRANSIT" : "PENDING") : i % 9 === 0 ? "CANCELLED" : "DELIVERED";
     const createdAt = new Date(now - (i < 4 ? i * 20 : i * 300) * 60_000);
     const steps = status === "CANCELLED" ? ["PENDING", "CANCELLED"] : flow.slice(0, flow.indexOf(status) + 1);
     const assigned = steps.includes("ASSIGNED");
@@ -90,10 +91,7 @@ async function main() {
         events: {
           create: steps.map((s, step) => ({ status: s as OrderStatus, createdAt: new Date(createdAt.getTime() + step * 6 * 60_000) })),
         },
-        locations:
-          status === "IN_TRANSIT"
-            ? { create: [{ latitude: 6.4474, longitude: 3.4721, recordedAt: new Date(now - 30_000) }] }
-            : undefined,
+        // Demo orders deliberately contain no GPS reports or guessed route coordinates.
       },
     });
   }

@@ -18,7 +18,7 @@ export default async function setup() {
 
   const db = new pg.Client({ connectionString: url });
   await db.connect();
-  await db.query(`TRUNCATE "RefreshToken","QrScan","TrackingPoint","OrderEvent","Payment","Order","QrCode",
+  await db.query(`TRUNCATE "StoredFile","RefreshToken","QrScan","TrackingPoint","OrderEvent","Payment","Order","QrCode",
                   "Customer","Bike","Rider","User","Tenant"`);
   await db.end();
 }

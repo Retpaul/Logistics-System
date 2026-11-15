@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { randomBytes } from "node:crypto";
+import { readStorageConfig } from "./storage.js";
 
 const nodeEnv = process.env.NODE_ENV ?? "development";
 const isProduction = nodeEnv === "production";
@@ -7,13 +8,51 @@ const isProduction = nodeEnv === "production";
 function accessSecret(): string {
   const value = process.env.JWT_ACCESS_SECRET;
   if (value && value.length >= 32) return value;
-  if (isProduction) throw new Error("JWT_ACCESS_SECRET must be set to at least 32 characters in production");
+  if (isProduction)
+    throw new Error(
+      "JWT_ACCESS_SECRET must be set to at least 32 characters in production",
+    );
   // Development convenience only: sessions stop working when the process restarts.
-  console.warn("JWT_ACCESS_SECRET is not set (or shorter than 32 characters); using a random development secret");
+  console.warn(
+    "JWT_ACCESS_SECRET is not set (or shorter than 32 characters); using a random development secret",
+  );
   return randomBytes(48).toString("base64url");
 }
 
 export const config = {
+  mail: () => {
+    const host = process.env.SMTP_HOST,
+      user = process.env.SMTP_USER,
+      pass = process.env.SMTP_PASSWORD,
+      from = process.env.SMTP_FROM;
+    const port = Number(process.env.SMTP_PORT ?? 587);
+    if (
+      !host ||
+      !user ||
+      !pass ||
+      !from ||
+      !Number.isInteger(port) ||
+      port < 1 ||
+      port > 65535
+    )
+      throw new Error(
+        "Configure SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_FROM and SMTP_PORT for rider invitations",
+      );
+    return {
+      from,
+      transport: {
+        host,
+        port,
+        secure: port === 465,
+        requireTLS: port !== 465,
+        auth: { user, pass },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+      },
+    };
+  },
+  storage: () => readStorageConfig(process.env),
   nodeEnv,
   isProduction,
   isTest: nodeEnv === "test",
@@ -28,6 +67,8 @@ export const config = {
     /** A rotated refresh token presented again within this window is two tabs racing, not theft. */
     refreshReuseGraceMs: Number(process.env.REFRESH_REUSE_GRACE_MS ?? 10_000),
     refreshCookieName: "bd_refresh",
-    cookieSecure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === "true" : isProduction,
+    cookieSecure: process.env.COOKIE_SECURE
+      ? process.env.COOKIE_SECURE === "true"
+      : isProduction,
   },
 };

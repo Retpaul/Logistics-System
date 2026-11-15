@@ -9,3 +9,4 @@ export * from "./auth.js";
 export * from "./tenant.js";
 export * from "./orders.js";
 export * from "./public.js";
+export * from "./dispatch.js";

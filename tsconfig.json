@@ -18,6 +18,7 @@
     "controllers/**/*.ts",
     "lib/**/*.ts",
     "middleware/**/*.ts",
+    "models/**/*.ts",
     "repositories/**/*.ts",
     "routes/**/*.ts",
     "services/**/*.ts",

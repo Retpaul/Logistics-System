@@ -28,7 +28,8 @@ export const toSessionUser = (u: User): SessionUser => ({
   role: u.role,
 });
 
-const fullName = (u: { firstName: string; lastName: string }) => `${u.firstName} ${u.lastName}`.trim();
+const fullName = (u: { firstName: string; lastName: string }) =>
+  `${u.firstName} ${u.lastName}`.trim();
 
 export const toOrderListItem = (o: OrderListRow): OrderListItem => ({
   id: o.id,
@@ -37,12 +38,30 @@ export const toOrderListItem = (o: OrderListRow): OrderListItem => ({
   packageSize: o.packageSize,
   pickupAddress: o.pickupAddress,
   deliveryAddress: o.deliveryAddress,
+  pickupLocation:
+    o.pickupLatitude !== null && o.pickupLongitude !== null
+      ? {
+          latitude: Number(o.pickupLatitude),
+          longitude: Number(o.pickupLongitude),
+        }
+      : null,
+  deliveryLocation:
+    o.deliveryLatitude !== null && o.deliveryLongitude !== null
+      ? {
+          latitude: Number(o.deliveryLatitude),
+          longitude: Number(o.deliveryLongitude),
+        }
+      : null,
   recipientName: o.recipientName,
   recipientPhone: o.recipientPhone,
   deliveryFee: o.deliveryFee.toFixed(2),
   currency: o.currency,
   createdAt: o.createdAt.toISOString(),
-  customer: { id: o.customer.id, name: o.customer.name, phone: o.customer.phone },
+  customer: {
+    id: o.customer.id,
+    name: o.customer.name,
+    phone: o.customer.phone,
+  },
   rider: o.rider ? { id: o.rider.id, name: fullName(o.rider.user) } : null,
 });
 
@@ -50,7 +69,18 @@ export const toOrderDetail = (o: OrderDetailRow): OrderDetail => ({
   ...toOrderListItem(o),
   notes: o.notes,
   updatedAt: o.updatedAt.toISOString(),
-  customer: { id: o.customer.id, name: o.customer.name, phone: o.customer.phone, email: o.customer.email },
+  proofFileId: o.proofFileId,
+  proofRecipient: o.proofRecipient,
+  customer: {
+    id: o.customer.id,
+    name: o.customer.name,
+    phone: o.customer.phone,
+    email: o.customer.email,
+  },
   qrCode: o.qrCode,
-  events: o.events.map((e) => ({ status: e.status, note: e.note, createdAt: e.createdAt.toISOString() })),
+  events: o.events.map((e) => ({
+    status: e.status,
+    note: e.note,
+    createdAt: e.createdAt.toISOString(),
+  })),
 });
