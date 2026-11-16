@@ -1,0 +1,141 @@
+{
+  "capturedAt": "2026-11-15T04:41:16.086Z",
+  "importId": "a4d1846a6ac05219a34f201c36dd7a595720bf6e4eba0c841c053c33593fd51f",
+  "status": "verified",
+  "sourceDataset": "Demo Couriers",
+  "selection": {
+    "limit": 20,
+    "candidates": 30,
+    "selected": 20,
+    "excludedActiveConflicts": 2
+  },
+  "sourceCounts": {
+    "Tenant": 3,
+    "User": 5,
+    "Rider": 1,
+    "Bike": 2,
+    "Customer": 7,
+    "QrCode": 3,
+    "QrScan": 1,
+    "Order": 32,
+    "StoredFile": "unavailable",
+    "OrderEvent": 134,
+    "TrackingPoint": 1,
+    "Payment": 0
+  },
+  "collections": {
+    "Tenant": {
+      "collection": "tenants",
+      "source": "available",
+      "selected": 1,
+      "inserted": 1,
+      "verified": 1,
+      "missingColumns": []
+    },
+    "User": {
+      "collection": "users",
+      "source": "available",
+      "selected": 3,
+      "inserted": 3,
+      "verified": 3,
+      "missingColumns": []
+    },
+    "Rider": {
+      "collection": "riders",
+      "source": "available",
+      "selected": 1,
+      "inserted": 1,
+      "verified": 1,
+      "missingColumns": [
+        "locationSource"
+      ]
+    },
+    "Bike": {
+      "collection": "bikes",
+      "source": "available",
+      "selected": 1,
+      "inserted": 1,
+      "verified": 1,
+      "missingColumns": []
+    },
+    "Customer": {
+      "collection": "customers",
+      "source": "available",
+      "selected": 5,
+      "inserted": 5,
+      "verified": 5,
+      "missingColumns": []
+    },
+    "QrCode": {
+      "collection": "qrcodes",
+      "source": "available",
+      "selected": 1,
+      "inserted": 1,
+      "verified": 1,
+      "missingColumns": []
+    },
+    "QrScan": {
+      "collection": "qrscans",
+      "source": "available",
+      "selected": 0,
+      "inserted": 0,
+      "verified": 0,
+      "missingColumns": []
+    },
+    "Order": {
+      "collection": "orders",
+      "source": "available",
+      "selected": 20,
+      "inserted": 20,
+      "verified": 20,
+      "missingColumns": [
+        "pickupLatitude",
+        "pickupLongitude",
+        "deliveryLatitude",
+        "deliveryLongitude"
+      ]
+    },
+    "StoredFile": {
+      "collection": "storedfiles",
+      "source": "unavailable",
+      "selected": 0,
+      "inserted": 0,
+      "verified": 0,
+      "missingColumns": []
+    },
+    "OrderEvent": {
+      "collection": "orderevents",
+      "source": "available",
+      "selected": 89,
+      "inserted": 89,
+      "verified": 89,
+      "missingColumns": []
+    },
+    "TrackingPoint": {
+      "collection": "trackingpoints",
+      "source": "available",
+      "selected": 1,
+      "inserted": 1,
+      "verified": 1,
+      "missingColumns": [
+        "source",
+        "accuracy"
+      ]
+    },
+    "Payment": {
+      "collection": "payments",
+      "source": "available",
+      "selected": 0,
+      "inserted": 0,
+      "verified": 0,
+      "missingColumns": []
+    }
+  },
+  "checks": {
+    "contentEquality": true,
+    "uuidAndReferences": true,
+    "secretsExcluded": true,
+    "legacyLocationHonest": true,
+    "sourceReadOnly": true
+  }
+}

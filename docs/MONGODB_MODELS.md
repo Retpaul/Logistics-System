@@ -1,6 +1,6 @@
 # MongoDB models
 
-**Schema/model foundation only—data migration not implemented.** PostgreSQL remains the application's database. The 13 Mongoose models are isolated from server startup; no MongoDB connection or data copy runs automatically.
+**Models plus an explicitly invoked portfolio sample copy.** PostgreSQL remains the application's database. The 13 Mongoose models stay isolated from server startup; no MongoDB connection or data copy runs automatically.
 
 ## Suitability
 
@@ -10,7 +10,7 @@ One collection per PostgreSQL model preserves UUID references and makes a later 
 
 PostgreSQL remains the stronger fit for the current application's existing relational constraints and SQL workflows. MongoDB references do not enforce foreign keys, tenant ownership or cascade/restrict deletes; future repositories must implement these checks. This schema is a migration-friendly starting point, not a completed MongoDB-native optimization or database replacement.
 
-## Connection URI for a later import
+## Connection URI
 
 Yes—a data import will need **both** the existing PostgreSQL `DATABASE_URL` and a MongoDB target:
 
@@ -30,7 +30,17 @@ MONGODB_URI=mongodb://127.0.0.1:27017/bike_dispatch_mongo
 
 For Atlas, use **Connect → Drivers**, configure a database user and permitted network access, and URL-encode special characters in credentials. Keep this server-side and out of Git. [Connection-string documentation](https://www.mongodb.com/docs/manual/reference/connection-string/).
 
-A blank placeholder is provided in `.env.example` and added to `.env` only if missing. Setting it **does not connect or migrate anything**: connection and import commands are a separate next step. Offline model tests need no credentials.
+A placeholder is provided in `.env.example`. Setting it **does not connect or migrate anything automatically**; only the explicit import command below uses it. Offline model tests need no credentials.
+
+## Verified portfolio copy
+
+`npm run portfolio:import` copies up to 20 linked orders from the largest source organisation using a read-only PostgreSQL snapshot. On 15 November 2026 it copied **122 business documents** from Demo Couriers; a second run inserted **zero** additional documents. See the [report](PORTFOLIO_REPORT.md), [initial receipt](portfolio/initial-import-summary.json) and [repeat receipt](portfolio/import-summary.json).
+
+The `users` collection contains a **redacted profile projection**, not complete authentication documents. The importer uses a separate schema without required password hashes; the original User model remains unchanged. Refresh tokens and invitation hashes are excluded. Dates, UUIDs and exact decimals are reconciled. Missing nullable columns are listed in the receipt; unavailable tracking provenance becomes LEGACY, never fabricated GPS. Payment was empty; StoredFile was unavailable.
+
+Indexes are explicitly installed for the import collections. Insert-only upserts never replace documents; unrelated UUID collisions or changed imported content cause failure. `_portfolio_imports` holds ownership/checksums and a five-minute lease; failed runs retain their partial inserts for safe retry. Rerun only an unchanged sample: changed source content requires a separately reviewed refresh, not implicit overwriting. A copy is not atomic across collections, and the receipt is written only after full verification.
+
+`npm run test:portfolio` checks selection, validation, redaction, collisions, interrupted-run recovery and idempotence in memory. `npm run portfolio:verify` independently rechecks source/target contents without database writes and saves a [verification summary](portfolio/verification-summary.json). This is a reporting sample, not a complete migration, backup, runtime switch or live replication.
 
 ## Model decisions
 
@@ -38,7 +48,7 @@ A blank placeholder is provided in `.env.example` and added to `.env` only if mi
 - Money and decimal coordinates use exact `Decimal128`; timestamps use `Date`; nullable fields default to `null`. New-document defaults mirror Prisma.
 - Stored hashes are excluded from ordinary selection and redacted from document serialization. They are never rehashed; explicit/raw queries still require access control.
 - Validation mirrors SQL storage rules, including empty-string compatibility, coordinate ranges/pairs and enums. API rules such as approval, delivery proof and valid status transitions stay in services.
-- Unique, compound and partial indexes are **declared only**. Nullable unique strings exclude nulls; the active-order index covers ASSIGNED/PICKED_UP/IN_TRANSIT rider assignments. No TTL or geospatial indexes are added.
+- Models declare unique, compound and partial indexes; only the explicit importer provisions relevant target indexes. Nullable unique strings exclude nulls; the active-order index covers ASSIGNED/PICKED_UP/IN_TRANSIT rider assignments. No TTL or geospatial indexes are added.
 - Automatic collection/index creation and command buffering are disabled. Use `createMongoModels(connection)` only with an explicitly supplied connection.
 
 ## Verification and limits
@@ -54,7 +64,7 @@ Tests check fields, types, defaults, enums, index declarations, validation and r
 
 Before importing: validate canonical UUIDs, CHAR padding/collation differences and unsupported dates; preserve source timestamps with `timestamps: false`; supply decimals as exact strings without rounding. PostgreSQL numeric NaN is retained for money where SQL allows it; coordinate NaN is rejected. S3 files remain in S3—MongoDB holds metadata only.
 
-The existing PostgreSQL migration conflict and preserved assignments are unchanged; see [Phase 2 rollout](PHASE_TWO.md). Future import still needs a defined dataset, credential scope, resumable copy and reconciliation. See the [server guide](SERVER_GUIDE.md) for application setup.
+The existing PostgreSQL migration conflict and preserved assignments are unchanged; see [Phase 2 rollout](PHASE_TWO.md). A full migration or continuous mirror still needs separate scope and operational testing. See the [server guide](SERVER_GUIDE.md) for application setup.
 
 <details>
 <summary>Field-by-field model and index reference (13 collections)</summary>

@@ -1,6 +1,6 @@
 # Server guide: setup, API and architecture
 
-Express 5 + TypeScript + PostgreSQL/Prisma powers the running API. Implemented modules include JWT sessions, tenant settings, orders, QR booking/tracking, rider invitations/approval, assignment/claiming, proof uploads, GPS, analytics and Socket.io. SMTP and private S3 require configuration. Card payments, SMS verification, 2FA and background mobile tracking are not implemented. MongoDB has an isolated schema/model foundation only: no connection, data migration or runtime switch. The historical MongoDB blueprint is a reference, not this server's setup guide.
+Express 5 + TypeScript + PostgreSQL/Prisma powers the running API. Implemented modules include JWT sessions, tenant settings, orders, QR booking/tracking, rider invitations/approval, assignment/claiming, proof uploads, GPS, analytics and Socket.io. SMTP and private S3 require configuration. Card payments, SMS verification, 2FA and background mobile tracking are not implemented. MongoDB has isolated models and an explicit redacted portfolio-sample importer; it is not connected by normal API startup and does not replace PostgreSQL. The historical MongoDB blueprint is a reference, not this server's setup guide.
 
 ## Run locally
 
@@ -90,4 +90,4 @@ The CLI configuration reads DATABASE_URL independently of runtime config. Applic
 
 ## MongoDB model foundation
 
-See [MONGODB_MODELS.md](MONGODB_MODELS.md) for all 13 typed model mappings, validation/index declarations, offline tests and deferred migration decisions. Models register only on an explicitly supplied connection; do not import them into normal startup. Run `npm run test:models` for offline verification; it does not require PostgreSQL or MongoDB credentials.
+See [MONGODB_MODELS.md](MONGODB_MODELS.md) for the 13 models and verified portfolio sample. Models remain outside normal startup. `npm run test:models` and `npm run test:portfolio` are offline; `npm run portfolio:import` explicitly reads PostgreSQL and populates the configured MongoDB target with a redacted linked sample. This is not live replication or an API database switch. The [portfolio report](PORTFOLIO_REPORT.md) summarises results and evidence suggestions.

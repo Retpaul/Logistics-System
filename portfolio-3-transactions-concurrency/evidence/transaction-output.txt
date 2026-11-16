@@ -1,0 +1,9 @@
+Extract from ../docs/transactions/output.txt (not a new execution)
+Captured at: 2026-11-12T13:27:55.379Z
+PASS commit: all three records persisted, verified from an independent connection.
+PASS rollback: customer, order and event all absent.
+PASS isolation: no dirty read; next statement in the same reader transaction sees the committed change.
+Observed B wait_event_type=Lock while A holds the order row.
+Conflict: B affected zero rows. The application maps this condition to HTTP 409 CONFLICT.
+PASS concurrency: one winner, one conflict, exactly one cancellation event.
+Cleanup: dropped only the disposable database created by this invocation.

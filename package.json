@@ -24,6 +24,9 @@
     "test:storage": "vitest run --config vitest.storage.config.ts",
     "test:models": "tsc -p tsconfig.models-tests.json && vitest run --config vitest.models.config.ts",
     "docs:models": "tsx scripts/document-mongo-models.ts",
+    "portfolio:import": "tsx scripts/import-portfolio.ts",
+    "portfolio:verify": "tsx scripts/verify-portfolio.ts",
+    "test:portfolio": "tsc -p tsconfig.portfolio.json && vitest run --config vitest.portfolio.config.ts",
     "storage:smoke": "tsx scripts/storage-smoke.ts",
     "db:seed:dev": "tsx scripts/seed-dev.ts"
   },

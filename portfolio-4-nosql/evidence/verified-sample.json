@@ -1,0 +1,27 @@
+{
+  "capturedAt": "2026-11-15T04:46:49.401Z",
+  "status": "verified",
+  "sourceReadOnly": true,
+  "targetReadOnly": true,
+  "verifiedDocuments": 122,
+  "selectedCollectionCounts": {
+    "tenants": 1,
+    "users": 3,
+    "riders": 1,
+    "bikes": 1,
+    "customers": 5,
+    "qrcodes": 1,
+    "qrscans": 0,
+    "orders": 20,
+    "storedfiles": 0,
+    "orderevents": 89,
+    "trackingpoints": 1,
+    "payments": 0
+  },
+  "indexesPresent": 42,
+  "manifestComplete": true,
+  "secretFieldsInSelectedRecords": 0,
+  "refreshtokensCopied": false,
+  "repeatInserted": 0,
+  "legacyTrackingPoints": 1
+}
